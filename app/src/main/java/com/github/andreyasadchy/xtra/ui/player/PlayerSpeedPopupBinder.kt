@@ -3,9 +3,11 @@ package com.github.andreyasadchy.xtra.ui.player
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.text.TextUtils
+import android.text.TextPaint
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -82,8 +84,8 @@ internal class PlayerSpeedPopupBinder(
             speedPopupTitle.setTextColor(colors.onPanel)
             currentSpeedText.setTextColor(colors.onPanel)
             speedPopupClose.imageTintList = ColorStateList.valueOf(colors.secondaryText)
-            btnDecreaseSpeed.background = ovalDrawable(colors.controlFill)
-            btnIncreaseSpeed.background = ovalDrawable(colors.controlFill)
+            btnDecreaseSpeed.background = controlRipple(ovalDrawable(colors.controlFill), ovalDrawable(Color.WHITE))
+            btnIncreaseSpeed.background = controlRipple(ovalDrawable(colors.controlFill), ovalDrawable(Color.WHITE))
             btnDecreaseSpeed.imageTintList = ColorStateList.valueOf(colors.onPanel)
             btnIncreaseSpeed.imageTintList = ColorStateList.valueOf(colors.onPanel)
             speedSlider.thumbTintList = ColorStateList.valueOf(colors.sliderActive)
@@ -107,14 +109,22 @@ internal class PlayerSpeedPopupBinder(
     }
 
     private fun buildPresetRows(speeds: List<Float>) {
-        val presetsPerRow = when {
+        var presetsPerRow = when {
             panelWidthPx >= dp(288f) -> 5
             panelWidthPx >= dp(232f) -> 4
             else -> 3
         }
         val horizontalGap = dp(6f)
         val availableWidth = panelWidthPx - dp(24f)
+        val labelPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = 14f * context.resources.displayMetrics.scaledDensity
+        }
+        val minimumWidth = maxOf(dp(48f).toFloat(), speeds.maxOf { labelPaint.measureText(formatPreset(it)) } + dp(12f))
+        while (presetsPerRow > 1 && (availableWidth - horizontalGap * (presetsPerRow - 1)) / presetsPerRow < minimumWidth) {
+            presetsPerRow--
+        }
         val presetWidth = (availableWidth - horizontalGap * (presetsPerRow - 1)) / presetsPerRow
+        val presetHeight = maxOf(dp(48f), labelPaint.fontMetricsInt.run { descent - ascent } + dp(12f))
         binding.speedPresetRows.removeAllViews()
 
         speeds.chunked(presetsPerRow).forEachIndexed { rowIndex, rowSpeeds ->
@@ -147,7 +157,7 @@ internal class PlayerSpeedPopupBinder(
                             intArrayOf(colors.onSelected, colors.onPanel),
                         ),
                     )
-                    textSize = 16f
+                    textSize = 14f
                     setOnClickListener {
                         applySpeed(speed)
                         onDismissRequested()
@@ -155,7 +165,7 @@ internal class PlayerSpeedPopupBinder(
                 }
                 row.addView(
                     preset,
-                    LinearLayout.LayoutParams(presetWidth, dp(48f)).apply {
+                    LinearLayout.LayoutParams(presetWidth, presetHeight).apply {
                         if (chipIndex > 0) marginStart = horizontalGap
                     },
                 )
@@ -197,10 +207,20 @@ internal class PlayerSpeedPopupBinder(
         setColor(color)
     }
 
-    private fun presetBackground(normalColor: Int, selectedColor: Int) = StateListDrawable().apply {
-        addState(intArrayOf(android.R.attr.state_selected), roundedDrawable(selectedColor, 20f))
-        addState(intArrayOf(), roundedDrawable(normalColor, 20f))
-    }
+    private fun presetBackground(normalColor: Int, selectedColor: Int) = controlRipple(
+        StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_selected), roundedDrawable(selectedColor, 20f))
+            addState(intArrayOf(), roundedDrawable(normalColor, 20f))
+        },
+        roundedDrawable(Color.WHITE, 20f),
+    )
+
+    private fun controlRipple(content: android.graphics.drawable.Drawable, mask: android.graphics.drawable.Drawable) =
+        android.graphics.drawable.RippleDrawable(
+            ColorStateList.valueOf(androidx.core.graphics.ColorUtils.setAlphaComponent(colors.onPanel, 48)),
+            content,
+            mask,
+        )
 
     private fun roundedDrawable(color: Int, radiusDp: Float) = GradientDrawable().apply {
         setColor(color)

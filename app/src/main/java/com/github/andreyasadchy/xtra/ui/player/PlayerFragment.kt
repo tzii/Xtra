@@ -58,7 +58,6 @@ import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
-import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -203,6 +202,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private var activePopupLayoutListener: View.OnLayoutChangeListener? = null
     private var activePopupTriggerLayoutListener: View.OnLayoutChangeListener? = null
     private var popupGeneration = 0
+    private var popupBackgroundAccessibility = emptyList<Pair<View, Int>>()
 
     // Gesture education
     private var gestureGuideShownThisSession = false
@@ -1635,7 +1635,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             trigger = trigger,
             content = popupBinding.root,
             panelWidth = panelWidth,
-            allowFullSurface = true,
         )
         activeQualityPopupBinder = binder
     }
@@ -1689,7 +1688,6 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             trigger = binding.playerControls.speed,
             content = popupBinding.root,
             panelWidth = panelWidth,
-            allowFullSurface = true,
         )
         activeSpeedPopupBinder = binder
     }
@@ -1736,15 +1734,28 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         trigger: View,
         content: View,
         panelWidth: Int,
-        allowFullSurface: Boolean = false,
     ) {
         hidePlayerPopup(restoreFocus = false, animate = false)
         popupAnchorRect = null
         val generation = ++popupGeneration
         val host = binding.playerPopupHost
         val container = host.playerPopupPanelContainer
+        // GONE overlays have no first-open geometry. Resolve the full fragment
+        // bounds before measuring/placing content, while the host is invisible.
+        host.root.visibility = View.INVISIBLE
+        host.root.measure(
+            View.MeasureSpec.makeMeasureSpec(binding.root.width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(binding.root.height, View.MeasureSpec.EXACTLY),
+        )
+        host.root.layout(0, 0, binding.root.width, binding.root.height)
         activePlayerPopup = type
         activePopupTrigger = trigger
+        // TalkBack should traverse the popup, not the obscured video/chat.
+        popupBackgroundAccessibility = listOf(binding.slidingLayout, binding.floatingChatRoot).map { background ->
+            val previousMode = background.importantForAccessibility
+            background.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            background to previousMode
+        }
         container.removeAllViews()
         // Reset every geometry field so a new popup never inherits margins or
         // size from the previously dismissed one; exact values follow in
@@ -1756,20 +1767,11 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             topMargin = 0
             gravity = Gravity.TOP or Gravity.START
         } ?: container.layoutParams
-        val viewport = NestedScrollView(requireContext()).apply {
-            id = R.id.playerPopupViewport
-            clipToOutline = true
-            isVerticalScrollBarEnabled = false
+        if (content is com.google.android.material.card.MaterialCardView && type != PlayerPopupType.VOLUME) {
+            PlayerPopupContent.prepare(content)
         }
-        viewport.addView(
-            content,
-            FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            ),
-        )
         container.addView(
-            viewport,
+            content,
             FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1777,9 +1779,10 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         )
         host.root.setOnClickListener { hidePlayerPopup() }
         container.setOnClickListener { /* Consume panel taps; children own their actions. */ }
-        content.alpha = 0f
-        content.scaleX = PLAYER_POPUP_START_SCALE
-        content.scaleY = PLAYER_POPUP_START_SCALE
+        container.animate().cancel()
+        container.alpha = 0f
+        container.scaleX = PLAYER_POPUP_START_SCALE
+        container.scaleY = PLAYER_POPUP_START_SCALE
         // Place the panel before it is ever drawn: measuring uses explicit
         // specs and does not need a layout pass, so the reveal animation's
         // first frame already sits at the anchored geometry instead of the
@@ -1806,7 +1809,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
                 }
             }
             activePopupLayoutListener = layoutListener
-            container.addOnLayoutChangeListener(layoutListener)
+            host.root.addOnLayoutChangeListener(layoutListener)
             val triggerListener = View.OnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
                 if (popupGeneration == generation && activePlayerPopup == type) {
                     positionPlayerPopup(container, trigger)
@@ -1819,114 +1822,100 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             // late control-bar reflows (quality label or viewer count text
             // changes) never drag a visible popup around.
             trigger.addOnLayoutChangeListener(triggerListener)
-            val focusableChildren = arrayListOf<View>()
-            content.addFocusables(focusableChildren, View.FOCUS_FORWARD)
-            focusableChildren.firstOrNull()?.requestFocus()
-            content.animate()
+            // Touch opening must not scroll the body to a focused row. Keyboard
+            // navigation still starts from the persistent close/header controls.
+            if (!container.isInTouchMode) {
+                val focusableChildren = arrayListOf<View>()
+                content.addFocusables(focusableChildren, View.FOCUS_FORWARD)
+                focusableChildren.firstOrNull()?.requestFocus()
+            }
+            val anchor = popupAnchorRect
+            container.pivotX = anchor?.let {
+                (it.centerX - container.left).toFloat().coerceIn(0f, container.width.toFloat())
+            } ?: (container.width / 2f)
+            container.pivotY = anchor?.let {
+                ((it.top + it.bottom) / 2f - container.top).coerceIn(0f, container.height.toFloat())
+            } ?: (container.height / 2f)
+            container.animate()
                 .alpha(1f)
                 .scaleX(1f)
                 .scaleY(1f)
+                .setInterpolator(android.view.animation.PathInterpolator(0.2f, 0f, 0f, 1f))
                 .setDuration(PLAYER_POPUP_OPEN_MS)
+                .withLayer()
                 .start()
         }
     }
 
-    private fun positionPlayerPopup(container: FrameLayout, trigger: View): PlayerPopupPolicy.Placement {
-        val insets = gestureInsets
-        val isRtl = binding.playerLayout.layoutDirection == View.LAYOUT_DIRECTION_RTL
-        // Measure the panel's natural height unconstrained so the placement
-        // policy sees the unclamped size, then clamp the container; the
-        // viewport scrolls whatever does not fit. Measurement uses explicit
-        // specs and does not depend on current layout params.
-        container.measure(
-            View.MeasureSpec.makeMeasureSpec(
-                PlayerPopupPolicy.panelWidthPx(binding.playerLayout.width, resources.displayMetrics.density),
-                View.MeasureSpec.AT_MOST,
-            ),
-            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+    /** Visible content bounds in overlay coordinates; portrait includes the area over chat. */
+    private fun popupSurfaceInsets(): PlayerPopupPolicy.Insets {
+        val root = binding.playerPopupHost.root
+        val location = IntArray(2)
+        root.getLocationOnScreen(location)
+        val visible = android.graphics.Rect()
+        root.getWindowVisibleDisplayFrame(visible)
+        // Keep all three rectangles in screen coordinates. GlobalVisibleRect
+        // is root-relative and can disagree with window/screen offsets.
+        val playerLocation = IntArray(2)
+        binding.playerLayout.getLocationOnScreen(playerLocation)
+        val player = android.graphics.Rect(
+            playerLocation[0], playerLocation[1],
+            playerLocation[0] + binding.playerLayout.width,
+            playerLocation[1] + binding.playerLayout.height,
         )
-        val surfaceWidth = binding.playerLayout.width
-        val surfaceHeight = binding.playerLayout.height
-        // Cache the first valid trigger rect: repositioning passes (surface or
-        // trigger relayouts while open) reuse it so a moving control bar can
-        // never teleport a visible popup. A null cache keeps re-reading until
-        // the trigger gains bounds, preserving the GONE-controls recovery.
+        val left = max(player.left, visible.left) - location[0]
+        val top = max(player.top, visible.top) - location[1]
+        val right = min(player.right, visible.right) - location[0]
+        val bottom = (if (binding.playerLayout.isPortrait) visible.bottom else min(player.bottom, visible.bottom)) - location[1]
+        return PlayerPopupPolicy.Insets(
+            left = left.coerceIn(0, root.width),
+            top = top.coerceIn(0, root.height),
+            right = (root.width - right).coerceIn(0, root.width),
+            bottom = (root.height - bottom).coerceIn(0, root.height),
+        )
+    }
+
+    private fun positionPlayerPopup(container: FrameLayout, trigger: View): PlayerPopupPolicy.Placement {
+        val surface = binding.playerPopupHost.root
+        val insets = popupSurfaceInsets()
+        val isRtl = surface.layoutDirection == View.LAYOUT_DIRECTION_RTL
         val anchor = popupAnchorRect ?: popupTriggerRect(trigger)?.also { popupAnchorRect = it }
-        val placement = PlayerPopupPolicy.place(
-            surfaceWidthPx = surfaceWidth,
-            surfaceHeightPx = surfaceHeight,
-            measuredPanelHeightPx = container.measuredHeight,
+        // Measure the card at the final width, never the constrained viewport.
+        fun place(height: Int) = PlayerPopupPolicy.place(
+            surfaceWidthPx = surface.width,
+            surfaceHeightPx = surface.height,
+            measuredPanelHeightPx = height,
             density = resources.displayMetrics.density,
-            insets = PlayerPopupPolicy.Insets(
-                left = insets?.left ?: 0,
-                top = insets?.top ?: 0,
-                right = insets?.right ?: 0,
-                bottom = insets?.bottom ?: 0,
-            ),
+            insets = insets,
             trigger = anchor,
             isRtl = isRtl,
-            expandToSurface = allowFullSurfaceForActivePopup,
         )
+        val content = container.getChildAt(0)
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(place(0).width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val placement = place(content.measuredHeight)
         applyPopupGeometry(
             container = container,
             width = placement.width,
-            height = min(container.measuredHeight, placement.maxHeight),
+            height = min(content.measuredHeight, placement.maxHeight),
             marginStart = PlayerPopupPolicy.startMarginPx(
-                surfaceWidthPx = surfaceWidth,
+                surfaceWidthPx = surface.width,
                 placementLeftPx = placement.left,
                 placementWidthPx = placement.width,
                 isRtl = isRtl,
             ),
             topMargin = placement.top,
         )
-        // Full-surface sheets dim the video behind them; anchored cards keep the
-        // video fully visible. The scrim is not clickable, so taps on it still
-        // reach the host root's outside-dismiss handler.
-        binding.playerPopupHost.root.findViewById<View>(R.id.playerPopupScrim)?.let { scrim ->
-            if (placement.fullSurface) {
-                if (!scrim.isVisible) {
-                    scrim.alpha = 0f
-                    scrim.isVisible = true
-                    scrim.animate().alpha(1f).setDuration(PLAYER_POPUP_OPEN_MS).start()
-                }
-            } else {
-                scrim.isVisible = false
-            }
-        }
-        // Full-surface sheets cover nearly the whole player, so blank sheet areas
-        // must dismiss like an outside tap would for anchored cards. Children
-        // (chips, slider, rows) still consume their own touches.
-        val viewport = container.getChildAt(0) as? ViewGroup
-        viewport?.setOnClickListener(
-            if (placement.fullSurface) {
-                View.OnClickListener { hidePlayerPopup() }
-            } else {
-                null
-            },
-        )
-        // Full-surface sheets stretch their card to cover the player when the
-        // content fits; overflowing content keeps natural height so the shared
-        // viewport can scroll it.
-        viewport?.let { scrollViewport ->
-            scrollViewport.getChildAt(0)?.let { panelContent ->
-                val desiredHeight = if (placement.fullSurface && container.measuredHeight <= placement.maxHeight) {
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                } else {
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-                }
-                if (panelContent.layoutParams.height != desiredHeight) {
-                    panelContent.layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        desiredHeight,
-                    )
-                }
-            }
+        val scrim = binding.playerPopupHost.playerPopupScrim
+        if (binding.playerLayout.isPortrait && !scrim.isVisible) {
+            scrim.alpha = 0f
+            scrim.isVisible = true
+            scrim.animate().alpha(1f).setDuration(PLAYER_POPUP_OPEN_MS).start()
         }
         return placement
     }
-
-    private val allowFullSurfaceForActivePopup: Boolean
-        get() = activePlayerPopup == PlayerPopupType.QUALITY || activePlayerPopup == PlayerPopupType.SPEED
 
     /** Writes popup geometry only when something actually changed to avoid relayout loops. */
     private fun applyPopupGeometry(
@@ -1955,7 +1944,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         if (!trigger.isAttachedToWindow || trigger.width <= 0 || trigger.height <= 0) return null
         val playerLocation = IntArray(2)
         val triggerLocation = IntArray(2)
-        binding.playerLayout.getLocationInWindow(playerLocation)
+        binding.playerPopupHost.root.getLocationInWindow(playerLocation)
         trigger.getLocationInWindow(triggerLocation)
         val left = triggerLocation[0] - playerLocation[0]
         val top = triggerLocation[1] - playerLocation[1]
@@ -1984,7 +1973,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             activeVolumePopupBinder = null
             activeMorePopupBinder?.dispose()
             activeMorePopupBinder = null
-            activePopupLayoutListener?.let(container::removeOnLayoutChangeListener)
+            activePopupLayoutListener?.let(host.root::removeOnLayoutChangeListener)
             activePopupLayoutListener = null
             activePopupTriggerLayoutListener?.let { listener ->
                 trigger?.removeOnLayoutChangeListener(listener)
@@ -2000,6 +1989,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
             host.playerPopupScrim.animate().cancel()
             host.playerPopupScrim.isVisible = false
             host.root.visibility = View.GONE
+            popupBackgroundAccessibility.forEach { (view, mode) -> view.importantForAccessibility = mode }
+            popupBackgroundAccessibility = emptyList()
             if (restoreFocus) {
                 trigger?.requestFocus()
                 if (controllerAutoHide && controllerHideOnTouch && !binding.playerControls.progressBar.isPressed) {
@@ -2010,12 +2001,19 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
 
         if (animate && content != null && host.root.isVisible) {
-            content.animate().cancel()
-            content.animate()
+            host.playerPopupScrim.animate().cancel()
+            host.playerPopupScrim.animate()
+                .alpha(0f)
+                .setDuration(PLAYER_POPUP_CLOSE_MS)
+                .start()
+            container.animate().cancel()
+            container.animate()
                 .alpha(0f)
                 .scaleX(PLAYER_POPUP_START_SCALE)
                 .scaleY(PLAYER_POPUP_START_SCALE)
+                .setInterpolator(android.view.animation.PathInterpolator(0.4f, 0f, 1f, 1f))
                 .setDuration(PLAYER_POPUP_CLOSE_MS)
+                .withLayer()
                 .withEndAction(::finish)
                 .start()
         } else {
@@ -3314,8 +3312,8 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         private const val PINCH_SETTLE_EPSILON = 0.001f
         private const val VOLUME_OVERLAY_DISMISS_MS = 1500L
         private const val PINCH_HINT_LINGER_MS = 3000L
-        private const val PLAYER_POPUP_OPEN_MS = 150L
-        private const val PLAYER_POPUP_CLOSE_MS = 100L
+        private const val PLAYER_POPUP_OPEN_MS = 220L
+        private const val PLAYER_POPUP_CLOSE_MS = 140L
         private const val PLAYER_POPUP_CONTROLLER_HIDE_DELAY_MS = 3000L
         private const val PLAYER_POPUP_START_SCALE = 0.97f
 

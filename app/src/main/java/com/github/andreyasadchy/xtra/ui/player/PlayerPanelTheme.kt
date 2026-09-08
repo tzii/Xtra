@@ -40,9 +40,10 @@ object PlayerPanelTheme {
         val controlBlend = if (lightPanel) 0.08f else 0.16f
         val strokeAlpha = if (lightPanel) 0.16f else 0.22f
         // Selected options render as solid accent pills; their content color is
-        // derived from the primary's luminance so any brand hue stays readable.
-        val onPrimary =
-            if (ColorUtils.calculateLuminance(primary) > 0.5) Color.rgb(20, 20, 20) else Color.WHITE
+        // chosen by actual contrast, not a luminance threshold that can put
+        // pale text on a mid-light accent (including the default lavender).
+        val onPrimary = if (ColorUtils.calculateContrast(Color.BLACK, primary) >=
+            ColorUtils.calculateContrast(Color.WHITE, primary)) Color.BLACK else Color.WHITE
         return PlayerPanelColors(
             panel = panel,
             onPanel = onPanel,

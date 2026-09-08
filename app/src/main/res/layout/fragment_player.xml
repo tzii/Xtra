@@ -59,13 +59,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <include
-                android:id="@+id/playerPopupHost"
-                layout="@layout/layout_player_popup_host"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone" />
-
         </com.github.andreyasadchy.xtra.ui.view.PlayerLayout>
 
         <com.github.andreyasadchy.xtra.ui.view.ChatLayout
@@ -163,4 +156,13 @@
                 app:tint="#FFFFFF" />
         </LinearLayout>
     </RelativeLayout>
+    <!-- Player-owned, but outside the 16:9 PlayerLayout so portrait menus can
+         use the space over chat. Above floating chat while a menu is open. -->
+    <include
+        android:id="@+id/playerPopupHost"
+        layout="@layout/layout_player_popup_host"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="24dp"
+        android:visibility="gone" />
 </RelativeLayout>

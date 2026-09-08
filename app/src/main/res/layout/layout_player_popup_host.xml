@@ -6,7 +6,7 @@
     android:focusable="false"
     android:importantForAccessibility="no">
 
-    <!-- Dim behind full-surface sheets only. Not clickable: touches fall through
+    <!-- Dim the portrait video/chat behind the popup. Touches fall through
          to the host root so tapping the dim still dismisses the popup. -->
     <View
         android:id="@+id/playerPopupScrim"

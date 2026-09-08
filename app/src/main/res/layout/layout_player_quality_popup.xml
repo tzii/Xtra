@@ -8,10 +8,10 @@
     app:cardBackgroundColor="@android:color/black"
     app:cardCornerRadius="24dp"
     app:cardElevation="4dp"
-    app:contentPaddingLeft="16dp"
-    app:contentPaddingTop="14dp"
+    app:contentPaddingLeft="12dp"
+    app:contentPaddingTop="8dp"
     app:contentPaddingRight="12dp"
-    app:contentPaddingBottom="16dp"
+    app:contentPaddingBottom="12dp"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -33,13 +33,14 @@
                 android:includeFontPadding="false"
                 android:text="@string/quality"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/qualityPopupClose"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/close"
                 android:src="@drawable/baseline_close_black_36"

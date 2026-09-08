@@ -59,11 +59,20 @@ inset-aware, trigger-relative placement and alpha/scale motion. The host consume
 and outside touches, keeps controls visible while open, closes on back/outside tap, and
 restores focus plus the normal control auto-hide timer on dismissal.
 
-Dismissal affordances by mode: anchored cards close via outside tap or back. Full-surface
-sheets additionally close from blank sheet-area taps (the shared viewport handles them),
-an explicit header close button, and a light non-clickable scrim behind the panel that
-passes taps through to the host's outside-dismiss handler. Quality, Speed, and More have
-header close buttons; Stream volume keeps its auto-dismiss timer instead.
+Popup motion animates the bounded container in both directions (220ms eased reveal,
+140ms exit), with its pivot clamped toward the cached trigger. Never animate the inner
+card on entry and the viewport on exit: scrolling makes their geometry differ. The
+scrim fades during dismissal, and replacement/teardown cancels pending motion. Platform
+animator duration settings apply. Quality/Speed chips provide bounded ripple feedback.
+Selected chip foregrounds use the higher-contrast black/white color for the accent.
+Quality binds text colors immediately because inherited drawable state can leave the
+first, unattached frame using the unselected text color. Speed uses a short visual
+heading with a full playback-speed accessibility label, keeping 200% text readable.
+
+Cards close via outside tap or back. Quality, Speed, and More also have persistent
+header close buttons with 48dp touch targets; Stream volume keeps its auto-dismiss timer.
+In portrait a light scrim dims video/chat and passes taps to the outside-dismiss handler.
+Taps in the card itself do not dismiss it unless an option's action requests dismissal.
 
 More keeps its existing grouped action order and preference gates. Its display-mode row
 intentionally opens the existing single-choice alert above the embedded host; the four
@@ -76,23 +85,24 @@ when the surface is too short for either they pin to the edge nearest the trigge
 Quality, Speed, and More stay top-anchored). Horizontally, left-side controls align the
 panel's left edge and right-side controls align its right edge before bounds clamping, so
 placement remains visibly tied to the button rather than drifting around the surface.
-Each popup is measured at natural height and then clamped inside the safe surface area by
-a shared scroll viewport
-(`playerPopupViewport`), so short portrait surfaces scroll whole-panel content instead of
-clipping it. Do not reintroduce per-popup inner height shrinking or fixed reserved-height
-estimates; they caused the portrait clipping regression.
+The host is a sibling of `slidingLayout`, above floating chat, **not a child of the
+16:9 `PlayerLayout`**. Portrait may use the visible fragment space over chat; landscape
+is bounded by the video's visible screen area. Surface and window rectangles use screen
+coordinates consistently; trigger coordinates are relative to the host. Width classes
+use the available video width, not the full window width including side chat.
 
-Full-surface sheets: Quality and Speed opt into expansion (`allowFullSurface`). When
-their natural height overflows the safe surface area — typical short portrait video
-strips — they expand into a sheet covering the entire safe player area instead of a
-small anchored card; content that still overflows scrolls in the shared viewport, and
-content that fits stretches the card to fill the surface. Volume and More never expand:
-Volume stays a small trigger-anchored panel and More stays bounded and scrollable.
+`PlayerPopupContent` preserves the card and its first/header row, moving only options
+into `playerPopupViewport`. More's old inner scroll view is unwrapped so only one scroll
+view handles options. Natural content height is measured at final width, then the card
+height is bounded and its weighted viewport receives the remaining space. Never wrap
+the whole card in a scroll view: that hides the rounded outline, title, and close button.
+Quality chips keep single-line Auto vertically centered beside codec pairs, and chip
+heights grow when enlarged fonts need more room.
 Popup content is bound before the host is shown, and `showPlayerPopup` places the
 container (explicit measure, no layout pass needed) before the host becomes visible,
 so the reveal animation's first frame is already at the anchored geometry. Placement
-application is idempotent (geometry written only on change), the container repositions
-on any geometry delta, and the first valid trigger rect is cached as the popup's anchor
+application is idempotent (geometry written only on change), host-bound changes trigger
+repositioning, and the first valid trigger rect is cached as the popup's anchor
 for its whole lifetime: while the cache is empty the trigger is re-read (a popup that
 opened from fallback geometry corrects itself when the trigger gains bounds, for
 example controls were GONE at open time), but once cached, later control-bar reflows —

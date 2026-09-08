@@ -103,6 +103,15 @@ internal class PlayerQualityPopupBinder(
             gapPx = horizontalGap,
         )
         val chipWidth = (availableWidth - horizontalGap * (columns - 1)) / columns
+        val labelPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
+        fun lineHeight(sizeSp: Float): Int {
+            labelPaint.textSize = sizeSp * context.resources.displayMetrics.scaledDensity
+            return labelPaint.fontMetricsInt.run { descent - ascent }
+        }
+        val chipHeight = maxOf(
+            dp(if (stableCodecHeight) 56f else 48f),
+            lineHeight(PRIMARY_LABEL_TEXT_SIZE_SP) + (if (stableCodecHeight) lineHeight(12f) else 0) + dp(12f),
+        )
         entries.chunked(columns).forEachIndexed { rowIndex, rowEntries ->
             val row = LinearLayout(context).apply {
                 orientation = LinearLayout.HORIZONTAL
@@ -117,7 +126,7 @@ internal class PlayerQualityPopupBinder(
             rowEntries.forEachIndexed { chipIndex, option ->
                 row.addView(
                     qualityChip(option, stableCodecHeight),
-                    LinearLayout.LayoutParams(chipWidth, if (stableCodecHeight) dp(56f) else dp(48f)).apply {
+                    LinearLayout.LayoutParams(chipWidth, chipHeight).apply {
                         if (chipIndex > 0) marginStart = horizontalGap
                     },
                 )
@@ -165,23 +174,27 @@ internal class PlayerQualityPopupBinder(
             setPadding(dp(4f), dp(4f), dp(4f), dp(4f))
 
             addView(TextView(context).apply {
+                isDuplicateParentStateEnabled = true
                 text = option.primaryLabel
                 gravity = Gravity.CENTER
                 includeFontPadding = false
                 maxLines = 1
                 ellipsize = TextUtils.TruncateAt.END
-                setTextColor(chipPrimaryTextColors())
+                // This selection is immutable until dismissal. Bind its color
+                // immediately, without waiting for inherited state on attachment.
+                setTextColor(if (selected) colors.onSelected else colors.onPanel)
                 textSize = PRIMARY_LABEL_TEXT_SIZE_SP
                 setTypeface(typeface, if (selected) Typeface.BOLD else Typeface.NORMAL)
             })
             if (stableCodecHeight && option.codecLabel != null) {
                 addView(TextView(context).apply {
+                    isDuplicateParentStateEnabled = true
                     text = option.codecLabel
                     gravity = Gravity.CENTER
                     includeFontPadding = false
                     maxLines = 1
                     ellipsize = TextUtils.TruncateAt.END
-                    setTextColor(chipSecondaryTextColors())
+                    setTextColor(if (selected) colors.onSelected else ColorUtils.setAlphaComponent(colors.onPanel, 212))
                     textSize = 12f
                 })
             }
@@ -192,20 +205,6 @@ internal class PlayerQualityPopupBinder(
         }
     }
 
-    /** Selected chips render on the solid accent fill and need its content color. */
-    private fun chipPrimaryTextColors() = ColorStateList(
-        arrayOf(intArrayOf(android.R.attr.state_selected), intArrayOf()),
-        intArrayOf(colors.onSelected, colors.onPanel),
-    )
-
-    private fun chipSecondaryTextColors() = ColorStateList(
-        arrayOf(intArrayOf(android.R.attr.state_selected), intArrayOf()),
-        intArrayOf(
-            ColorUtils.setAlphaComponent(colors.onSelected, 235),
-            ColorUtils.setAlphaComponent(colors.onPanel, 212),
-        ),
-    )
-
     private fun isSelected(option: PlayerQualityPopupOption): Boolean {
         val selected = selectedTag.normalizedValue()
         return option.tag.normalizedValue() == selected || when (option.kind) {
@@ -215,10 +214,14 @@ internal class PlayerQualityPopupBinder(
         }
     }
 
-    private fun chipBackground(normalColor: Int, selectedColor: Int) = StateListDrawable().apply {
-        addState(intArrayOf(android.R.attr.state_selected), roundedDrawable(selectedColor, 20f))
-        addState(intArrayOf(), roundedDrawable(normalColor, 20f))
-    }
+    private fun chipBackground(normalColor: Int, selectedColor: Int) = android.graphics.drawable.RippleDrawable(
+        ColorStateList.valueOf(ColorUtils.setAlphaComponent(colors.onPanel, 48)),
+        StateListDrawable().apply {
+            addState(intArrayOf(android.R.attr.state_selected), roundedDrawable(selectedColor, 20f))
+            addState(intArrayOf(), roundedDrawable(normalColor, 20f))
+        },
+        roundedDrawable(android.graphics.Color.WHITE, 20f),
+    )
 
     private fun roundedDrawable(color: Int, radiusDp: Float) = GradientDrawable().apply {
         setColor(color)

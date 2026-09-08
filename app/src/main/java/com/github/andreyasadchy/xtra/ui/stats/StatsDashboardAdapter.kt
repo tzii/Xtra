@@ -1,11 +1,14 @@
 package com.github.andreyasadchy.xtra.ui.stats
 
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ItemStatsCategoriesBinding
 import com.github.andreyasadchy.xtra.databinding.ItemStatsFavoriteChannelsBinding
 import com.github.andreyasadchy.xtra.databinding.ItemStatsHeatmapBinding
@@ -57,13 +60,35 @@ class StatsDashboardAdapter : ListAdapter<StatsDashboardItem, RecyclerView.ViewH
         private val binding: ItemStatsScreenTimeBinding,
     ) : RecyclerView.ViewHolder(binding.root) {
 
+        init {
+            // At large text sizes, show each metric beside its caption instead
+            // of breaking numbers and units across three narrow columns.
+            if (binding.root.resources.configuration.fontScale > 1.3f) {
+                binding.root.findViewById<LinearLayout>(R.id.screenTimeMetrics)?.let { metrics ->
+                    metrics.orientation = LinearLayout.VERTICAL
+                    val gap = (12 * metrics.resources.displayMetrics.density).toInt()
+                    for (index in 0 until metrics.childCount) {
+                        val metric = metrics.getChildAt(index) as LinearLayout
+                        metric.orientation = LinearLayout.HORIZONTAL
+                        metric.gravity = Gravity.CENTER_VERTICAL
+                        metric.setPadding(0, 0, 0, 0)
+                        metric.layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                            if (index > 0) topMargin = gap
+                        }
+                        metric.getChildAt(0).layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.2f).apply { marginEnd = gap }
+                        metric.getChildAt(1).layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+                    }
+                }
+            }
+        }
+
         fun bind(item: StatsDashboardItem.ScreenTime) {
             binding.dailyAverageText.text = item.dailyAverageText
             binding.weekChangeText.text = item.weekChangeText
             binding.todayTimeText.text = item.todayTimeText
             binding.weekTotalLabel.text = item.rangeTotalLabelText
             binding.weekTotalText.text = item.weekTotalText
-            binding.dailyBarChart.setData(item.chartData, animate = false)
+            binding.dailyBarChart.setData(item.chartData)
         }
     }
 

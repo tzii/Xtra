@@ -1,7 +1,6 @@
 package com.github.andreyasadchy.xtra.ui.player
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -132,24 +131,24 @@ class PlayerPopupPolicyTest {
     }
 
     @Test
-    fun `expansion only triggers on natural height overflow`() {
-        assertTrue(PlayerPopupPolicy.shouldExpandToSurface(measuredPanelHeightPx = 501, maxHeightPx = 500))
-        assertFalse(PlayerPopupPolicy.shouldExpandToSurface(measuredPanelHeightPx = 500, maxHeightPx = 500))
-        assertFalse(PlayerPopupPolicy.shouldExpandToSurface(measuredPanelHeightPx = 100, maxHeightPx = 0))
+    fun `portrait card can extend below video and stay attached to top button`() {
+        val placement = PlayerPopupPolicy.place(360, 800, 400, 1f,
+            trigger = PlayerPopupPolicy.Rect(288, 16, 336, 64))
+        assertEquals(72, placement.top)
+        assertTrue(placement.top + 400 > 203) // 16:9 video ends here.
+        assertEquals(328, placement.width)
     }
 
     @Test
-    fun `expanded popup fills the whole safe surface regardless of trigger`() {
+    fun `long menu stays bounded without expanding its width`() {
         val placement = PlayerPopupPolicy.place(
             surfaceWidthPx = 1080,
             surfaceHeightPx = 600,
             measuredPanelHeightPx = 3000,
             density = 3f,
             trigger = PlayerPopupPolicy.Rect(900, 400, 1000, 500),
-            expandToSurface = true,
         )
 
-        assertTrue(placement.fullSurface)
         assertEquals(48, placement.left)
         assertEquals(48, placement.top)
         assertEquals(984, placement.width)
@@ -157,18 +156,17 @@ class PlayerPopupPolicyTest {
     }
 
     @Test
-    fun `popup that fits stays anchored even when expansion is allowed`() {
+    fun `side chat does not change the video popup width class`() {
         val placement = PlayerPopupPolicy.place(
-            surfaceWidthPx = 1080,
+            surfaceWidthPx = 1000,
             surfaceHeightPx = 600,
             measuredPanelHeightPx = 300,
-            density = 3f,
-            trigger = PlayerPopupPolicy.Rect(900, 400, 1000, 500),
-            expandToSurface = true,
+            density = 1f,
+            insets = PlayerPopupPolicy.Insets(right = 500),
+            trigger = PlayerPopupPolicy.Rect(420, 16, 468, 64),
         )
-
-        assertFalse(placement.fullSurface)
-        assertEquals(48, placement.left)
-        assertEquals(76, placement.top)
+        assertEquals(PlayerPopupPolicy.panelWidthPx(500, 1f), placement.width)
+        assertEquals(72, placement.top)
+        assertEquals(468, placement.left + placement.width)
     }
 }

@@ -69,6 +69,7 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    testOptions.unitTests.isIncludeAndroidResources = true
     androidResources {
         generateLocaleConfig = true
     }
@@ -151,6 +152,7 @@ dependencies {
 
     // Testing dependencies
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16.1")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     testImplementation("org.mockito:mockito-core:5.10.0")

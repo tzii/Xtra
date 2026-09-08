@@ -44,6 +44,20 @@ Agents should mark **Required** when a human should test an area. Mark **Complet
 | Icon/banner assets look correct | [ ] | [ ] | |
 | No private account data exposed | [ ] | [ ] | |
 
+### Popup / Stats redesign regression pass
+
+- Portrait: open Quality, Speed and More over live/VoD video. Menus may cover chat;
+  scroll to the last option with title, close button and card outline still visible.
+- Repeat in landscape, side-chat/tablet and split-screen, RTL, and 200% font size.
+  Auto is centered next to codec labels; no quality label or utility option clips.
+- Close with close/back/outside tap, then interact with chat. Repeat rapid open/close,
+  rotation, stream switching, minimize/restore, close/reopen and PiP/background.
+- Check speed/quality changes, gestures and floating chat before/after dismissal.
+- Stats: switch 7 days / 30 days / All time quickly; check compact metrics, streaks,
+  range-label reachability, empty/minute-long/multi-hour charts, wide layouts and rotation.
+- Repeat transitions with system animations disabled. Real-device feel and playback
+  verification are still required even when Android view-measurement tests pass.
+
 ## Evidence
 
 Screenshots, videos, logs, or APK links:

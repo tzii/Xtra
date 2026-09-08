@@ -22,34 +22,41 @@
             app:menu="@menu/stats_menu"
             app:title="@string/stats" />
 
-        <com.google.android.material.button.MaterialButtonToggleGroup
-            android:id="@+id/rangeButtonGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="@dimen/stats_page_padding"
-            android:layout_marginEnd="@dimen/stats_page_padding"
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/stats_page_padding"
+            android:paddingEnd="@dimen/stats_page_padding"
             android:layout_marginBottom="8dp"
-            app:checkedButton="@id/range7Days"
-            app:layout_scrollFlags="scroll|enterAlways"
-            app:selectionRequired="true"
-            app:singleSelection="true">
+            android:scrollbars="none"
+            app:layout_scrollFlags="scroll|enterAlways">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/range7Days"
-                style="@style/StatsRangeButton"
-                android:text="@string/stats_range_7_days" />
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/rangeButtonGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:checkedButton="@id/range7Days"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/range30Days"
-                style="@style/StatsRangeButton"
-                android:text="@string/stats_range_30_days" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/range7Days"
+                    style="@style/StatsRangeButton"
+                    android:text="@string/stats_range_7_days" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/rangeAllTime"
-                style="@style/StatsRangeButton"
-                android:text="@string/stats_range_all_time" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/range30Days"
+                    style="@style/StatsRangeButton"
+                    android:text="@string/stats_range_30_days" />
 
-        </com.google.android.material.button.MaterialButtonToggleGroup>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/rangeAllTime"
+                    style="@style/StatsRangeButton"
+                    android:text="@string/stats_range_all_time" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+        </HorizontalScrollView>
 
     </com.google.android.material.appbar.AppBarLayout>
 

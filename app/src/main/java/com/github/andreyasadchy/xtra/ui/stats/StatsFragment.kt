@@ -267,6 +267,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats), Scrollable {
             }
         }
         binding.statsRecyclerView.adapter = dashboardAdapter
+        (binding.statsRecyclerView.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
+            ?.supportsChangeAnimations = false
         binding.statsRecyclerView.setHasFixedSize(false)
         replaceDashboardSpacingDecoration(binding.statsRecyclerView)
     }

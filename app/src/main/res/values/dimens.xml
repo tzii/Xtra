@@ -8,7 +8,7 @@
     <dimen name="stats_section_spacing">12dp</dimen>
     <dimen name="stats_card_inner_padding">14dp</dimen>
     <dimen name="stats_item_inner_padding">14dp</dimen>
-    <dimen name="stats_card_corner_radius">12dp</dimen>
+    <dimen name="stats_card_corner_radius">20dp</dimen>
     <dimen name="stats_item_card_corner_radius">8dp</dimen>
     <dimen name="stats_title_margin_top">8dp</dimen>
     <dimen name="stats_title_margin_bottom">12dp</dimen>

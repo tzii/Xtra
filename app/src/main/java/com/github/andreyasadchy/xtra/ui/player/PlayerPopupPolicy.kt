@@ -6,15 +6,14 @@ import kotlin.math.min
  * Pure sizing and placement policy for the player-owned popup host.
  *
  * Popups prefer the space immediately above their trigger and clamp within
- * the visible player surface. Their near horizontal edge follows the trigger
+ * the supplied visible surface. Their near horizontal edge follows the trigger
  * side, so left and right controls have a stable visual relationship with the
  * panel. If trigger geometry is unavailable, they fall back to the bottom-end
  * edge (bottom-start in RTL) instead of drifting to the center on large screens.
  *
- * Quality and Speed additionally opt into [place]'s expandToSurface: when their
- * natural height would overflow the safe player area (short portrait video
- * strips), they expand into a sheet covering the whole safe surface instead of
- * a small scrolling card.
+ * Portrait supplies the full player-fragment height (including chat below the
+ * video); landscape supplies video bounds. Oversized bodies scroll inside a
+ * fixed card without changing its width or losing the header.
  */
 object PlayerPopupPolicy {
 
@@ -46,7 +45,6 @@ object PlayerPopupPolicy {
         val top: Int,
         val width: Int,
         val maxHeight: Int,
-        val fullSurface: Boolean = false,
     )
 
     fun panelWidthPx(surfaceWidthPx: Int, density: Float): Int {
@@ -71,13 +69,6 @@ object PlayerPopupPolicy {
         }.coerceAtLeast(0)
     }
 
-    fun shouldExpandToSurface(measuredPanelHeightPx: Int, maxHeightPx: Int): Boolean {
-        // Expand into a full-surface sheet only when the anchored card would
-        // overflow the safe player area, i.e. exactly when whole-panel scrolling
-        // would otherwise be needed.
-        return maxHeightPx > 0 && measuredPanelHeightPx > maxHeightPx
-    }
-
     fun place(
         surfaceWidthPx: Int,
         surfaceHeightPx: Int,
@@ -86,33 +77,19 @@ object PlayerPopupPolicy {
         insets: Insets = Insets(),
         trigger: Rect? = null,
         isRtl: Boolean = false,
-        expandToSurface: Boolean = false,
     ): Placement {
+        val availableWidth = (surfaceWidthPx - insets.left - insets.right).coerceAtLeast(0)
         val large = density > 0f &&
-            PlayerSurfacePolicy.classify(surfaceWidthPx, density) == PlayerSurfaceClass.LARGE
+            PlayerSurfacePolicy.classify(availableWidth, density) == PlayerSurfaceClass.LARGE
         val edge = dp(if (large) LARGE_EDGE_INSET_DP else COMPACT_EDGE_INSET_DP, density)
         val gap = dp(TRIGGER_GAP_DP, density)
         val safeLeft = insets.left + edge
         val safeTop = insets.top + edge
         val safeRight = (surfaceWidthPx - insets.right - edge).coerceAtLeast(safeLeft)
         val safeBottom = (surfaceHeightPx - insets.bottom - edge).coerceAtLeast(safeTop)
-        val width = min(panelWidthPx(surfaceWidthPx, density), safeRight - safeLeft).coerceAtLeast(0)
+        val width = min(panelWidthPx(availableWidth, density), safeRight - safeLeft).coerceAtLeast(0)
         val maxHeight = (safeBottom - safeTop).coerceAtLeast(0)
         val height = measuredPanelHeightPx.coerceIn(0, maxHeight)
-
-        val fullSurface = expandToSurface && shouldExpandToSurface(measuredPanelHeightPx, maxHeight)
-        if (fullSurface && surfaceWidthPx > 0) {
-            // Full-surface sheet: cover the whole safe player area regardless of
-            // trigger geometry. Content taller than the sheet still scrolls in
-            // the shared viewport.
-            return Placement(
-                left = safeLeft,
-                top = safeTop,
-                width = safeRight - safeLeft,
-                maxHeight = maxHeight,
-                fullSurface = true,
-            )
-        }
 
         val validTrigger = trigger?.takeIf { it.isValid }
         val fallbackLeft = if (isRtl) safeLeft else safeRight - width

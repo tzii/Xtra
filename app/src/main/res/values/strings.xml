@@ -160,6 +160,7 @@
     <string name="api_helix_client_id">Helix client ID</string>
     <string name="api_gql_client_id">GQL client ID</string>
     <string name="playback_speed">Playback speed</string>
+    <string name="player_speed_title" tools:ignore="MissingTranslation">Speed</string>
     <string name="quality">Quality</string>
     <string name="saved_value">Saved value</string>
     <string name="video_type_archive">Past broadcast</string>
@@ -779,7 +780,7 @@
     <string name="stats_all_time" translatable="false">All time</string>
     <string name="stats_range_7_days" translatable="false">7 days</string>
     <string name="stats_range_30_days" translatable="false">30 days</string>
-    <string name="stats_range_all_time" translatable="false">All</string>
+    <string name="stats_range_all_time" translatable="false">All time</string>
     <string name="current_streak" translatable="false">Current streak</string>
     <string name="longest_streak" translatable="false">Longest streak</string>
     <string name="categories_watched" translatable="false">Categories Watched</string>

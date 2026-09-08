@@ -8,10 +8,10 @@
     app:cardBackgroundColor="@android:color/black"
     app:cardCornerRadius="24dp"
     app:cardElevation="4dp"
-    app:contentPaddingLeft="16dp"
-    app:contentPaddingTop="14dp"
+    app:contentPaddingLeft="12dp"
+    app:contentPaddingTop="8dp"
     app:contentPaddingRight="12dp"
-    app:contentPaddingBottom="16dp"
+    app:contentPaddingBottom="12dp"
     app:strokeWidth="1dp">
 
     <LinearLayout
@@ -31,9 +31,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:includeFontPadding="false"
-                android:text="@string/playback_speed"
+                android:text="@string/player_speed_title"
+                android:contentDescription="@string/playback_speed"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -49,8 +50,9 @@
 
             <ImageButton
                 android:id="@+id/speedPopupClose"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:padding="12dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/close"
                 android:src="@drawable/baseline_close_black_36"
@@ -86,6 +88,7 @@
                 android:stepSize="0.05"
                 app:haloColor="@android:color/transparent"
                 app:labelBehavior="gone"
+                app:tickVisible="false"
                 app:thumbColor="@android:color/white"
                 app:trackColorActive="@android:color/white"
                 app:trackColorInactive="#2AFFFFFF"
