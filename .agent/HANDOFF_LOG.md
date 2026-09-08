@@ -1,5 +1,11 @@
 # Session log — append one line per handoff, newest on top, keep last 20
 
+- 2026-09-08 · Codex · 78493944 · Checkpointed popup/Stats implementation, tests and findings on codex/player-ux-tablet-live-discovery; main untouched. Next: on-device popup/Stats and complete player regression QA before merge.
+
+- 2026-09-08 · Codex · f6c7bbae+ · Repaired popup parent/scroll structure and redesigned compact Stats; native previews reviewed, debug build + 330 tests + lint passed (0 errors); device placement/playback/animation QA pending.
+
+- 2026-09-07 · Codex · f6c7bbae+ · Polished popup motion/ripples and Stats transitions; debug build, 322 tests, lint verified; device QA pending.
+
 - 2026-08-22 · zcode · d5f379b5+ · Fixed Quality first-press jump (pre-reveal positioning, frozen anchor) and raised portrait sheet text contrast; device QA pending.
 - 2026-08-22 · ox-alpha · d5f379b5+ · Fixed sheet dismissal (blank tap/scrim/close buttons) and refreshed popup design; device QA pending.
 - 2026-08-22 · ox-alpha · d5f379b5+ · Added full-surface Quality/Speed sheets, label-fit columns, stable popup repositioning; device QA pending.

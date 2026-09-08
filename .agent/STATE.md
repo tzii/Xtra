@@ -1,22 +1,20 @@
 # ThystTV current state
 
 Status:  REVIEW
-Agent:   zcode
+Agent:   Codex
 
-Focus:   Validate round-8 popup fixes on device: Quality menu must open without
-         the first-press jump (pre-reveal positioning + frozen anchor) and stay
-         put while the quality label/viewer count refresh; portrait sheet text
-         contrast (section labels, codec sublabels) in light/dark themes.
-Next:    Install a fresh debug APK, run the round-8 QA list in
-         .agent/plans/active/2026-08-22-popup-jump-portrait-readability-round8.md
-         plus the standard player lifecycle regression list.
+Focus:   Device-verify the structural popup repair and compact Stats redesign.
+Next:    Install app/build/outputs/apk/debug/app-debug.apk and run the popup/Stats
+         regression pass in docs/MANUAL_QA.md, including playback/lifecycle checks.
 Pointer: codex/player-ux-tablet-live-discovery
-As-of:   2026-08-22 · d5f379b5 + rounds 5-8 popup & stats follow-ups (uncommitted)
+As-of:   2026-09-08 · 78493944 (implementation checkpoint)
 
-Notes:   Round 8 binds popup content before showing, positions the container
-         before the host is revealed (no first-frame top-left flash), and caches
-         the first valid trigger rect so control-bar reflows cannot drag an open
-         popup. Secondary panel text contrast raised for portrait sheets over
-         video. `assembleDebug`, all unit tests, and `lintDebug` pass (0 errors).
-         If portrait readability still fails QA, get a screenshot before changing
-         anything — the complaint may be about size/layout, not contrast.
+Notes:   Popup host is outside 16:9 PlayerLayout; portrait uses space over chat,
+         with fixed card/header and a single scrolling body. Stats has compact
+         metrics, large-font reflow, and adaptive chart scales. Native previews
+         inspected; 330 tests passed; debug assembly and lint passed (0 errors,
+         333 warnings). Local UI/regression review and docs complete.
+         Plan: .agent/plans/active/2026-09-08-popup-structure-stats-redesign.md.
+         No device attached; actual window placement, animation feel, playback,
+         gestures and floating-chat/lifecycle QA still required before merge.
+         Implementation and findings committed on the feature branch; main untouched.
