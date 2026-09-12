@@ -168,6 +168,15 @@ On Windows, use Git Bash with Java 21 and the Android SDK available. Set
 THYSTTV_GIT_BASH for a nonstandard installation. All native Windows verifier
 cases must run on Windows; a shell script named .bat is not native validation.
 
+`publish-release.test.mjs` exercises the maintainer publication command with isolated
+files and command-boundary fixtures: read-only operation, exact-byte publication, existing
+release verification, redacted policy data, tampered artifacts and failed/partial releases.
+These fixtures do not contact GitHub or sign an APK. When changing this command, also
+run its read-only mode against an existing release whose signed-RC artifact is retained:
+`node scripts/release/publish-release.mjs <tag>`. This checks actual GitHub policy data,
+the Android SDK verifier and downloaded public bytes without creating a release. See
+`RELEASE_PROCESS.md` for prerequisites and evidence handling.
+
 Use the existing developer debug key for upgrades on a development device. An
 unsigned release assembly is not an official candidate. See
 [the 1.3 review guide](RELEASE_1_3_REVIEW.md) for validation and remaining checks,

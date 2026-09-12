@@ -46,6 +46,7 @@ If more code-style rules are needed later, add `docs/CONVENTIONS.md` in a separa
 - CI: `.github/workflows/ci.yml`
 - Debug APK workflow: `.github/workflows/debug-build.yml`
 - Release workflow: `.github/workflows/release.yml`
+- Maintainer publication and verification: `scripts/release/publish-release.mjs`
 
 ### Upstream Xtra Sync
 
