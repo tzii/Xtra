@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/images/readme/app-icon.svg" width="112" height="112" alt="ThystTV app icon">
+  <img src="docs/images/icons/launcher/store-512.png" width="112" height="112" alt="ThystTV violet gem with a cyan play symbol">
 </p>
 
 <h1 align="center">ThystTV</h1>
@@ -31,7 +31,7 @@
 
 **ThystTV** is a third-party Twitch client for Android. It is based on [Xtra](https://github.com/crackededed/Xtra), with ThystTV-specific work aimed at making the viewing experience cleaner, faster, and more comfortable on phones, tablets, and large displays.
 
-The current focus is the `1.2.1` release: player refinement, better floating chat behavior, local watch-history insights, repo polish, and a more complete project presentation.
+The `1.3` release line brings consistent player overlays, pinch display controls, clearer local Stats, live discovery and a more resilient updater. See the [1.3 release notes](docs/release-notes/1.3.0.md) for the changes and upgrade guidance.
 
 > ThystTV is a fork of Xtra. A lot of credit goes to the Xtra project for the foundation this app builds on.
 
@@ -41,42 +41,39 @@ The current focus is the `1.2.1` release: player refinement, better floating cha
 |---|---|
 | Repository | [`tzii/ThystTV`](https://github.com/tzii/ThystTV) |
 | Active branch | [`master`](https://github.com/tzii/ThystTV/tree/master) |
-| Current release | `1.2.1` |
+| Published release | [Latest available APK](https://github.com/tzii/ThystTV/releases/latest) |
+| Version in this branch | [`1.3.0`](docs/release-notes/1.3.0.md) |
 | License | [GNU AGPL-3.0](LICENSE) |
 | Primary language | Kotlin, with Java components |
 
 ## Screenshots
 
+**1.3 UI previews.** These are native renders of the Android layouts with sample
+data, including example update details. The Speed preview uses enlarged text.
+See [preview sources](docs/images/review-1.3/README.md) for their provenance.
+
 <table>
   <tr>
-    <td width="33%" align="center">
-      <strong>Popular streams</strong><br><br>
-      <img src="docs/images/readme/popular.png" alt="Popular streams tab in ThystTV" width="260">
+    <td width="50%" align="center" valign="top">
+      <strong>Video quality</strong><br><br>
+      <img src="docs/images/review-1.3/quality-font-1.0.png" alt="ThystTV 1.3 Quality overlay with readable codec labels and audio-only and chat-only actions" width="288">
     </td>
-    <td width="34%" align="center">
-      <strong>Full-screen player</strong><br><br>
-      <img src="docs/images/readme/player.png" alt="Full-screen player with floating chat overlay" width="430">
-    </td>
-    <td width="33%" align="center">
-      <strong>Local stats</strong><br><br>
-      <img src="docs/images/readme/stats.png" alt="Local stats dashboard in ThystTV" width="260">
+    <td width="50%" align="center" valign="top">
+      <strong>Playback speed · enlarged text</strong><br><br>
+      <img src="docs/images/review-1.3/speed-large-text.png" alt="ThystTV 1.3 Speed overlay with the current speed, slider and preset buttons at enlarged text size" width="288">
     </td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td width="33%" align="center">
-      <strong>Playback speed</strong><br><br>
-      <img src="docs/images/readme/playback-speed.png" alt="Playback speed popup showing active speed controls" width="300">
+    <td width="50%" align="center" valign="top">
+      <strong>Local Stats</strong><br><br>
+      <img src="docs/images/review-1.3/stats-font-1.0.png" alt="ThystTV 1.3 Stats layout with sample viewing totals, a weekly chart and streaks" width="288">
     </td>
-    <td width="34%" align="center">
-      <strong>Video quality</strong><br><br>
-      <img src="docs/images/readme/video-quality.png" alt="Video quality popup with quality and chat-only controls" width="300">
-    </td>
-    <td width="33%" align="center">
-      <strong>Updater changelog</strong><br><br>
-      <img src="docs/images/readme/changelog-update.jpg" alt="Updater dialog showing release changelog and download action" width="260">
+    <td width="50%" align="center" valign="top">
+      <strong>Updater and release notes</strong><br><br>
+      <img src="docs/images/review-1.3/updater-dark-1.0.png" alt="ThystTV 1.3 update dialog with sample version details, rendered release notes and download actions" width="288">
     </td>
   </tr>
 </table>
@@ -84,6 +81,9 @@ The current focus is the `1.2.1` release: player refinement, better floating cha
 ## Floating chat
 
 Floating chat is one of ThystTV's headline viewing upgrades. It keeps chat available during full-screen playback without forcing the player into a cramped split layout.
+
+The device demo below was recorded before 1.3. The gallery above shows the current
+player controls and updater layouts.
 
 <p align="center">
   <img src="docs/images/readme/floating-chat.png" alt="Full-screen playback with floating chat overlay" width="760">
@@ -100,6 +100,8 @@ https://github.com/user-attachments/assets/99d97579-3340-4200-8aa7-3cae0414560e
 ### Player refinement
 
 - Gesture-based playback controls for horizontal seek, playback speed, brightness, and volume.
+- Pinch between Fit and Fill in landscape, with Stretch available in display settings.
+- Quality, Speed, Stream volume and More share consistent overlays with reachable controls.
 - Clearer feedback while interacting with the player.
 - Better visual handling for minimized player states.
 - VoD scrubbing improvements that scale with video duration.
@@ -127,7 +129,7 @@ https://github.com/user-attachments/assets/99d97579-3340-4200-8aa7-3cae0414560e
 
 - Layout work for tablets and wider Android screens.
 - Player and browsing screens tuned to avoid cramped controls.
-- More polished presentation for the 1.2 release cycle.
+- Player menus and Stats adapt to enlarged text and resized windows.
 
 ## Build from source
 
@@ -165,7 +167,7 @@ ThystTV is distributed independently. It is not affiliated with, endorsed by, or
 - [Player notes](docs/PLAYER.md)
 - [Gesture system](docs/GESTURE_SYSTEM.md)
 - [Release process](docs/RELEASE_PROCESS.md)
-- [1.2 release plan](docs/RELEASE_1_2_PLAN.md)
+- [1.3 release notes](docs/release-notes/1.3.0.md)
 - [Distribution policy](docs/DISTRIBUTION.md)
 - [APK verification guide](docs/APK_VERIFICATION.md)
 - [Security policy](SECURITY.md)
