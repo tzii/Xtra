@@ -30,6 +30,13 @@ or animation smoothness. Human checks below remain required.
 
 ## Manual regression checklist
 
+`PlayerPinchChatTest` covers pinch takeover from hidden/sidebar/floating chat,
+floating-chat disabled, unchanged ordinary pinches, normal double-tap transitions,
+rejected duplicate claims and preservation of an unset chat preference. It invokes
+the real listener and fragment chat/pinch methods with Android views and
+preferences; player attachment and network chat are mocked. It does not simulate
+the platform's double-tap timing or actual playback.
+
 ### Release resource encoding
 
 - `LocalizedStringsTest` loads packaged resources in all 13 affected locales and

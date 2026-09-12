@@ -210,6 +210,12 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
 
     // Floating Chat Properties
     private var isFloatingChatEnabled = false
+    private data class ChatModeSnapshot(
+        val isOpen: Boolean,
+        val isFloating: Boolean,
+        val savedOpen: Boolean?,
+    )
+    private var doubleTapChatSnapshot: ChatModeSnapshot? = null
     private var dX = 0f
     private var dY = 0f
     private var initialWidth = 0
@@ -3270,6 +3276,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     override fun onDestroyView() {
+        doubleTapChatSnapshot = null
         systemUiListener.detach()
         finalizePinchSurface()
         hidePlayerPopup(restoreFocus = false, animate = false)
@@ -3494,6 +3501,23 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
         }
     }
 
+    private fun restoreDoubleTapChat() {
+        val snapshot = doubleTapChatSnapshot ?: return
+        doubleTapChatSnapshot = null
+        isChatOpen = snapshot.isOpen
+        isFloatingChatEnabled = snapshot.isFloating
+        binding.floatingChatRoot.animate().cancel()
+        binding.floatingChatRoot.alpha = 1f
+        binding.floatingChatRoot.visibility = if (isFloatingChatEnabled) View.VISIBLE else View.GONE
+        reparentChatView(toFloating = isFloatingChatEnabled)
+        if (isChatOpen && !isFloatingChatEnabled) showChatLayout() else hideChatLayout()
+        prefs.edit {
+            if (snapshot.savedOpen != null) putBoolean(C.KEY_CHAT_OPENED, snapshot.savedOpen)
+            else remove(C.KEY_CHAT_OPENED)
+        }
+        updateChatButtonIcon()
+    }
+
     private fun toggleFloatingChat() {
         if (isPortrait) return
 
@@ -3662,7 +3686,15 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     override fun claimDoubleTapChat(): Boolean {
-        return gestureArbiter.onDoubleTapClaimed()
+        if (!gestureArbiter.onDoubleTapClaimed()) return false
+        // The listener cycles chat immediately after this claim. Keep its exact
+        // prior state until this pointer sequence ends or a pinch takes over.
+        doubleTapChatSnapshot = ChatModeSnapshot(
+            isOpen = isChatOpen,
+            isFloating = isFloatingChatEnabled,
+            savedOpen = if (prefs.contains(C.KEY_CHAT_OPENED)) prefs.getBoolean(C.KEY_CHAT_OPENED, true) else null,
+        )
+        return true
     }
 
     private fun twoFingerSpan(event: MotionEvent, pointerId1: Int, pointerId2: Int): Float {
@@ -3677,6 +3709,7 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     }
 
     private fun resetPinchTracking() {
+        doubleTapChatSnapshot = null
         pinchPointerId1 = -1
         pinchPointerId2 = -1
         pinchAnchorSpan = 0f
@@ -3692,9 +3725,9 @@ abstract class PlayerFragment : BaseNetworkFragment(), RadioButtonDialogFragment
     private fun beginPinch(supersededDoubleTap: Boolean, event: MotionEvent) {
         if (supersededDoubleTap) {
             // The pinch's first-finger down was consumed as the second tap of a
-            // double tap and already toggled chat; revert so an intentional
-            // pinch does not toggle chat.
-            cycleChatMode()
+            // double tap. Restore the snapshot: cycling again is not an inverse
+            // when floating chat adds a third mode.
+            restoreDoubleTapChat()
         }
         finalizePinchSurface()
         pinchController.begin(effectivePinchDisplayMode())

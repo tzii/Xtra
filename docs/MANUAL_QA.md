@@ -57,6 +57,16 @@ Screenshots, videos, logs, or APK links:
 
 ## 1.3 release checks
 
+- [ ] Landscape, maximized player, double-tap chat and floating chat enabled: from
+  each of hidden, sidebar and floating chat, tap once and immediately begin a
+  two-finger pinch (first finger lands within the double-tap interval). After the
+  scale threshold is crossed, chat must return to its starting mode, in the same
+  container, with the correct player width and chat icon. Verify it stays restored
+  after animations settle and both fingers lift; repeat with a cancelled pinch.
+- [ ] Repeat from hidden/sidebar with floating chat disabled. A normal double tap
+  must still advance one mode; a normal pinch must leave chat unchanged. Reopen
+  playback and confirm the saved chat-open choice was not changed by the pinch.
+
 - During an updater download, cancel/retry and rotate/background/restore; one current
   attempt should remain and stale work must not launch an installer.
 - Interrupt a transfer and verify retry/browser recovery. Deny/grant install permission;

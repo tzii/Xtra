@@ -22,6 +22,19 @@ The paths below are a map, not a guarantee. If code has moved, search for the cu
 - Quality, Speed, Stream volume, and More share one player-owned popup host; only one
   can be attached at a time, and teardown/minimize/PiP must remove it with the player view.
 
+## Pinch and double-tap chat ownership
+
+A pinch can supersede a double tap when its first finger is interpreted as the
+second tap. Capture the chat flags and saved-open preference before the accepted
+double tap cycles chat. On pinch takeover, restore that snapshot, cancel the chat
+fade, reparent the existing chat view and restore sidebar/video geometry and the
+chat button icon. Another cycle cannot undo hidden/sidebar/floating's three-state
+transition. Clear the snapshot at pointer-sequence boundaries and view destruction.
+
+`PlayerPinchChatTest` exercises the real fragment transitions, listener, arbiter,
+Android containers and preferences with fragment attachment/network chat mocked.
+Device gesture timing and playback still need the manual matrix in `MANUAL_QA.md`.
+
 ## High-Risk Files
 
 Update this list as the code evolves.

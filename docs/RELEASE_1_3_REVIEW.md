@@ -26,14 +26,29 @@ Corresponding regression tests are in `app/src/test/`.
 | Resources and branding | `res/values-*/strings.xml`, launcher resources, `docs/images/icons/launcher/` | Verify baseline translation wording, encoding, adaptive/themed geometry and fallbacks. |
 | Build and release | `app/build.gradle.kts`, `scripts/release/verify-apk*`, `.gitattributes`, CI workflows and release notes | Version is 1.3.0/code 12. Verify native Windows quoting/failures, certificate checking and unchanged official signing/promotion boundaries. |
 
+## Pinch/chat review correction
+
+The source review found that a pinch superseding double-tap chat cycled the chat
+mode a second time instead of restoring it. With floating chat enabled this moved
+to the third mode. The correction captures the prior chat flags and saved-open
+preference, then restores the existing view's container, visibility, player margin
+and button icon. The snapshot is limited to the current pointer sequence.
+
+`PlayerPinchChatTest` reproduces all three incorrect starting-mode rollbacks on the
+reviewed baseline. Its nine cases exercise the real fragment/listener behavior,
+including floating disabled, normal double taps and pinches, rejected claims and
+an unset saved preference. Fragment attachment and network chat are mocked; device timing and
+the gesture matrix in [MANUAL_QA.md](MANUAL_QA.md) still need verification.
+
 ## Validation
 
-- Normal `test lintDebug assembleDebug assembleRelease` passed: 488 Android tests,
+- After the pinch/chat correction, `test lintDebug assembleDebug assembleRelease`
+  passed: 497 Android tests (including all nine new fragment regressions),
   0 failures/errors/skips; lint 0 errors and 342 existing warnings. Release assembly
   is unsigned. Android adapter/resource tests supplement production-core tests.
 - Repository tests passed on Windows: 55 passes and two POSIX-only skips, including
   all five native Windows verifier cases. Source contracts and shell syntax passed.
-- The public app/build source matches the validated 1.3 implementation. GitHub CI
+- All 1,044 public app/build inputs match the locally validated source. GitHub CI
   provides fresh results for the pushed PR head; inspect those checks separately.
 - Device testing confirmed a same-package debug update completed, About showed
   1.3.0-DEBUG, and settings/saved data remained intact. The test used equal version
