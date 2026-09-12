@@ -69,19 +69,22 @@ export function verifyReleaseTagRulesets(protection, authorization, expected) {
     if (JSON.stringify(includes) !== JSON.stringify(["refs/tags/v*"]) || excludes.length !== 0) {
       throw new Error(`${name} has the wrong tag target`);
     }
+    if (!Array.isArray(rule.bypass_actors)) {
+      throw new Error(`${name}: bypass_actors is unavailable or malformed; use maintainer authentication with ruleset write access`);
+    }
   }
 
   const protectionTypes = (protection.rules ?? []).map(({ type }) => type).sort();
   if (JSON.stringify(protectionTypes) !== JSON.stringify(["deletion", "update"])) {
     throw new Error("Protect release tags must contain exactly deletion and update");
   }
-  if ((protection.bypass_actors ?? []).length !== 0) throw new Error("Protect release tags must not have bypass actors");
+  if (protection.bypass_actors.length !== 0) throw new Error("Protect release tags must not have bypass actors");
 
   const authorizationTypes = (authorization.rules ?? []).map(({ type }) => type);
   if (JSON.stringify(authorizationTypes) !== JSON.stringify(["creation"])) {
     throw new Error("Authorize release tag creation must contain only creation");
   }
-  const actors = authorization.bypass_actors ?? [];
+  const actors = authorization.bypass_actors;
   if (actors.length !== 1 || Number(actors[0].actor_id) !== Number(expected.userId) ||
       actors[0].actor_type !== "User" || actors[0].bypass_mode !== "always") {
     throw new Error("release tag creation authority mismatch");

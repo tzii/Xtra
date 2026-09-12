@@ -221,3 +221,31 @@ test("release tag policy rejects misconfigured rulesets", () => {
   assert.throws(() => verifyReleaseTagRulesets(protection, { ...authorization, bypass_actors: [{ actor_id: 178386212, actor_type: "RepositoryRole", bypass_mode: "always" }] }, expected), /creation authority mismatch/);
   assert.throws(() => verifyReleaseTagRulesets(protection, { ...authorization, bypass_actors: [{ actor_id: 178386212, actor_type: "User", bypass_mode: "pull_request" }] }, expected), /creation authority mismatch/);
 });
+
+test("redacted or malformed bypass lists never mean no bypass actors", () => {
+  const common = {
+    target: "tag",
+    enforcement: "active",
+    conditions: { ref_name: { include: ["refs/tags/v*"], exclude: [] } },
+  };
+  const protection = {
+    ...common, name: "Protect release tags", bypass_actors: [],
+    rules: [{ type: "deletion" }, { type: "update" }],
+  };
+  const authorization = {
+    ...common, name: "Authorize release tag creation",
+    bypass_actors: [{ actor_id: 178386212, actor_type: "User", bypass_mode: "always" }],
+    rules: [{ type: "creation" }],
+  };
+  for (const value of [undefined, null, {}, "", { length: 0 }]) {
+    for (const index of [0, 1]) {
+      const policies = structuredClone([protection, authorization]);
+      if (value === undefined) delete policies[index].bypass_actors;
+      else policies[index].bypass_actors = value;
+      assert.throws(
+        () => verifyReleaseTagRulesets(...policies, { userId: 178386212 }),
+        /bypass_actors.*ruleset write access/,
+      );
+    }
+  }
+});

@@ -93,6 +93,10 @@ Before tagging, verify both rulesets exist exactly once and validate completely:
 
 Record both ruleset IDs and full configurations in the out-of-tree release evidence before
 tagging, and re-run every invariant against their post-publication configurations.
+Use the maintainer's local GitHub CLI authentication for these checks. GitHub only returns
+`bypass_actors` to callers with write access to the ruleset; the workflow's built-in token
+cannot verify this authority. An omitted or malformed bypass list is an error, never an
+empty list. See [GitHub's ruleset API documentation](https://docs.github.com/en/rest/repos/rules#get-a-repository-ruleset).
 Administrators can still edit the rulesets themselves even though direct tag mutation is
 blocked while the rules remain active; never weaken, duplicate, or silently re-target a
 ruleset to work around a failed validation — stop for deliberate policy correction instead.
@@ -111,17 +115,67 @@ approved RC run and compare them with the values approved during review before t
 peeled tag SHA must equal the frozen RC SHA. Lightweight tags, duplicate tag fields, or a
 peeled SHA mismatch stop the release.
 
-## Exact-byte publication
+## Read-only tag verification
 
-Pushing the tag runs `promote_release`, which verifies `github.actor == 'tzii'`, requires an
+Pushing the tag runs `verify_release_tag`, which verifies `github.actor == 'tzii'`, requires an
 annotated tag object, parses exactly one run ID and manifest digest from the tag message,
 validates the RC workflow run (exact run ID, `workflow_dispatch`, `success`, release workflow
-path, `head_sha` equal to the peeled SHA), validates both release-tag rulesets against user
-ID `178386212`, downloads artifact `{peeled_sha}-{run_id}`, re-verifies the manifest digest,
-APK checksum, package/version/code/certificate, and the full promotion binding — then
-publishes the downloaded APK, APK checksum, and manifest as three required release assets
-with `gh release create --verify-tag --notes-file docs/release-notes/{version}.md`.
-Publication never runs `assembleRelease` and never touches keystore secrets.
+path, `head_sha` equal to the peeled SHA), downloads artifact `{peeled_sha}-{run_id}`, and
+re-verifies the manifest digest, APK checksum, package/version/code/certificate, and the
+full promotion binding. Its summary hands publication to the maintainer.
+
+This job has only `contents: read` and `actions: read`. A green tag job means the candidate
+was verified; it does **not** mean a release was published or full ruleset authority was
+verified. No repository-admin credential is stored in Actions. Signing secrets remain
+exclusive to the signed-RC build.
+
+## Maintainer exact-byte publication
+
+After the required reviews and device QA, use `scripts/release/publish-release.mjs` from
+a trusted checkout containing this tool. Prerequisites are Node.js, Git, GitHub CLI
+authenticated as `tzii` (user ID `178386212`) with ruleset write access, Java 21, and an
+Android SDK with command-line tools and build-tools. On Windows put Git Bash and Java on
+`PATH`, and set `ANDROID_HOME` to the SDK directory. The frozen RC commit must be available
+locally; the tool reads its version, notes and certificate with `git show`.
+
+Fetch the frozen source and tags, then verify without publishing (replace the sample tag
+with the approved tag):
+
+```powershell
+git fetch origin master --tags
+node scripts/release/publish-release.mjs v1.3.1
+```
+
+The default is read-only on GitHub. It verifies the authenticated maintainer, annotated
+tag, full ruleset configurations, successful signed-RC run, exact four-file bundle,
+manifest binding and APK signature/package/version/checksum. It reads release notes from
+the frozen commit and does not build or re-sign the APK. Review the JSON result and
+retained evidence. `ready-for-publication` means these automated checks passed; the command
+does not perform or certify device QA or independent review.
+
+Once approval for the exact candidate is recorded, publish with:
+
+```powershell
+node scripts/release/publish-release.mjs v1.3.1 --publish
+```
+
+This repeats verification, checks the tag and policies immediately before publication,
+then uses `gh release create --verify-tag` with the frozen release notes and exactly three
+assets: APK, APK checksum and RC manifest. It downloads the public assets, compares their
+bytes with the signed bundle, confirms the release is stable/latest, and rechecks tag and
+ruleset invariants. It never edits an existing release or overwrites assets. An existing
+matching stable release is verified and reported as `existing-release-verified`; drafts,
+prereleases and mismatched assets stop for investigation. A failed create/upload may leave
+a partial release; inspect it before attempting recovery.
+
+Each invocation retains evidence in a fresh temporary directory printed in its output.
+Use `--evidence-dir <new-directory>` to choose another location; its parent must exist and
+the chosen directory must not. Do not reuse a directory from a previous attempt.
+
+The historical v1.3.0 tag run failed because its built-in token could not see the creation
+bypass actor. The approved exact-byte bundle was subsequently published through the
+maintainer CLI and verified. That frozen run remains failed; this workflow change applies
+to future tags. Do not rerun it to republish 1.3.0, or move/recreate its tag.
 
 ## Post-publication checks and immutable-tag rollback policy
 
@@ -140,5 +194,6 @@ the entire RC/review pipeline with a new tag.
 Publication stops on any of: missing or expired run artifacts, non-dispatch runs,
 unsuccessful conclusions, wrong head SHA, lightweight tags, duplicate or missing tag fields,
 version mismatch, wrong package/certificate/checksum, a missing, duplicate, inactive, or
-malformed release-tag ruleset, a wrong creation authority, any protection bypass, a missing
-required release asset, or any attempt to rebuild the APK during promotion.
+malformed release-tag ruleset, an unavailable bypass list, a wrong creation authority, any
+protection bypass, a missing required release asset, or any attempt to rebuild the APK
+during promotion.

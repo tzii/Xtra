@@ -8,6 +8,7 @@ const buildGradle = fs.readFileSync("app/build.gradle.kts", "utf8");
 const ciWorkflow = fs.readFileSync(".github/workflows/ci.yml", "utf8");
 const debugWorkflow = fs.readFileSync(".github/workflows/debug-build.yml", "utf8");
 const workflow = fs.readFileSync(".github/workflows/release.yml", "utf8");
+const publisher = fs.readFileSync("scripts/release/publish-release.mjs", "utf8");
 const workflows = [
   ["release", workflow],
   ["CI", ciWorkflow],
@@ -155,7 +156,7 @@ test("structured APK verification always runs after pinned Java 21 setup", () =>
     /java --class-path "\$apksigner_jar" --source 21 scripts\/release\/VerifyApkSigner\.java/,
   );
 
-  const promotion = workflow.split(/^ {2}promote_release:\s*$/m)[1] ?? "";
+  const promotion = workflow.split(/^ {2}verify_release_tag:\s*$/m)[1] ?? "";
   const promotionJava = promotion.indexOf("      - name: Set up Java");
   const promotionVerifier = promotion.indexOf("bash scripts/release/verify-apk.sh");
   assert.ok(promotionVerifier > -1, "promotion APK verifier not found");
@@ -168,7 +169,7 @@ test("structured APK verification always runs after pinned Java 21 setup", () =>
 test("workflow exposes the build-once promotion state machine", () => {
   assert.match(workflow, /expected_rc_sha:/);
   assert.match(workflow, /build_signed_rc:/);
-  assert.match(workflow, /promote_release:/);
+  assert.match(workflow, /verify_release_tag:/);
 });
 
 test("dispatch SHA is data, not executable shell source", () => {
@@ -205,7 +206,7 @@ test("dispatch SHA is data, not executable shell source", () => {
 test("default and job permissions are least privilege", () => {
   assert.match(workflow, /contents:\s*read/);
   assert.match(workflow, /actions:\s*read/);
-  assert.match(workflow, /contents:\s*write/);
+  assert.doesNotMatch(workflow, /(?:contents|actions|administration):\s*write/);
 });
 
 test("keystore handling is guarded and cleaned up", () => {
@@ -225,20 +226,20 @@ test("RC binds run ID and manifest digest through tag metadata", () => {
   assert.match(workflow, /RC-Manifest-SHA256/);
 });
 
-test("promotion publishes verified bytes only", () => {
-  assert.match(workflow, /--verify-tag/);
-  const promotion = workflow.split(/^\s{2}promote_release:\s*$/m)[1] ?? "";
-  assert.ok(promotion.length > 0, "promote_release job not found");
+test("tag workflow verifies bytes and explicitly hands publication to the maintainer", () => {
+  const promotion = workflow.split(/^\s{2}verify_release_tag:\s*$/m)[1] ?? "";
+  assert.ok(promotion.length > 0, "verify_release_tag job not found");
   assert.doesNotMatch(
     promotion,
     /(?:\.\/)?gradlew|assembleRelease|KEYSTORE_BASE64|KEYSTORE_PASSWORD|KEY_ALIAS|KEY_PASSWORD/,
   );
-  assert.match(promotion, /Protect release tags/);
-  assert.match(promotion, /Authorize release tag creation/);
-  assert.match(promotion, /release-metadata\.mjs policy/);
+  assert.doesNotMatch(promotion, /gh release create|gh api[^\n]*rulesets|secrets\./);
+  assert.match(promotion, /has not published a release or verified the full ruleset authority/);
+  assert.match(promotion, /node scripts\/release\/publish-release\.mjs v\$\{VERSION_NAME\} --publish/);
   assert.match(promotion, /github\.actor[^\n]*tzii|tzii[^\n]*github\.actor/);
   assert.match(promotion, /release-bundle\/rc-manifest\.json/);
-  assert.match(promotion, /178386212/);
+  assert.match(publisher, /178386212/);
+  assert.match(publisher, /verifyReleaseTagRulesets/);
 });
 
 test("manifest checksum is generated and verified with directory-stable paths", () => {
@@ -248,7 +249,7 @@ test("manifest checksum is generated and verified with directory-stable paths", 
   const checksumCommand = checksumStep.match(/^\s*(sha256sum\s+[^\n]+rc-manifest\.json\.sha256)\s*$/m)?.[1];
   assert.ok(checksumCommand, "manifest checksum generation command not found");
 
-  const promotion = workflow.split(/^\s{2}promote_release:\s*$/m)[1] ?? "";
+  const promotion = workflow.split(/^\s{2}verify_release_tag:\s*$/m)[1] ?? "";
   const verifyCommand = promotion.match(/^\s*(\(cd release-bundle && sha256sum --check rc-manifest\.json\.sha256\))\s*$/m)?.[1];
   assert.ok(verifyCommand, "manifest checksum verification command not found");
 
@@ -281,15 +282,14 @@ test("manifest checksum is generated and verified with directory-stable paths", 
   }
 });
 
-test("promotion reads the official signing certificate and attaches required assets", () => {
+test("tag verification checks the official certificate and required bundle assets", () => {
   assert.match(workflow, /official-signing-certificate\.sha256/);
-  const promotion = workflow.split(/^\s{2}promote_release:\s*$/m)[1] ?? "";
+  const promotion = workflow.split(/^\s{2}verify_release_tag:\s*$/m)[1] ?? "";
   assert.match(promotion, /download-artifact/);
   assert.match(promotion, /run-id:/);
   assert.match(promotion, /github-token:/);
-  assert.match(promotion, /ThystTV-\$\{VERSION_NAME\}\.apk"/);
-  assert.match(promotion, /ThystTV-\$\{VERSION_NAME\}\.apk\.sha256"/);
-  assert.match(promotion, /rc-manifest\.json"/);
+  assert.match(promotion, /ThystTV-\$\{\{ steps.version.outputs.version_name \}\}\.apk\.sha256/);
+  assert.match(promotion, /release-metadata\.mjs promotion release-bundle\/rc-manifest\.json promotion-expected\.json/);
 });
 
 test("artifacts are never overwritten", () => {
@@ -299,7 +299,8 @@ test("artifacts are never overwritten", () => {
 
 test("release notes cannot fall back to generated placeholder text", () => {
   assert.doesNotMatch(workflow, /Release notes were not found/);
-  assert.match(workflow, /--notes-file "docs\/release-notes\/\$\{VERSION_NAME\}\.md"/);
+  assert.match(publisher, /assertCompleteReleaseNotes\(notes\)/);
+  assert.match(publisher, /"--notes-file", notesFile/);
 });
 
 test("PR CI runs repository contract tests and the release verifier syntax check", () => {
