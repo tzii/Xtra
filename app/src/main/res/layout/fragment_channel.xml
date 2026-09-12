@@ -145,6 +145,7 @@
                             android:id="@+id/title"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:textAppearance="?attr/textAppearanceTitleMedium"
                             android:visibility="gone"
                             tools:text="@sample/streams.json/streams/channel/status"
@@ -207,15 +208,23 @@
                     tools:text="Last broadcast %s"
                     tools:visibility="visible" />
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/watchLive"
+                    style="@style/LiveWatchPill"
                     android:layout_width="wrap_content"
-                    android:layout_height="50dp"
-                    android:gravity="center"
-                    android:text="@string/open_player"
-                    android:textAllCaps="true"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textSize="17sp" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/watch_live"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/openPlayer"
+                    style="@style/OpenPlayerPill"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/open_player" />
 
             </LinearLayout>
 

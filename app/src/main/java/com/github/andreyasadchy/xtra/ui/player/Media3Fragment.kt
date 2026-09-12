@@ -137,7 +137,7 @@ class Media3Fragment : PlayerFragment() {
                 override fun onVideoSizeChanged(videoSize: VideoSize) {
                     if (videoSize != VideoSize.UNKNOWN && player?.let { it.playbackState != Player.STATE_IDLE } == true) {
                         val aspectRatio = (videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height
-                        binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
+                        updateVideoAspectRatio(aspectRatio)
                     }
                 }
 
@@ -677,7 +677,7 @@ class Media3Fragment : PlayerFragment() {
             } else {
                 subtitles.visibility = View.GONE
             }
-            (childFragmentManager.findFragmentByTag("closeOnPip") as? PlayerSettingsDialog?)?.setSubtitles(textTracks)
+            updateMorePopupSubtitles(textTracks)
         }
     }
 

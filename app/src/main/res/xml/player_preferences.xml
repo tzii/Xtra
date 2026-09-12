@@ -40,6 +40,13 @@
             app:iconSpaceReserved="false"
             app:singleLineTitle="false" />
 
+        <Preference
+            android:key="player_gesture_guide"
+            android:title="@string/player_gesture_guide_title"
+            android:summary="@string/player_gesture_guide_settings_summary"
+            app:iconSpaceReserved="false"
+            app:singleLineTitle="false" />
+
     </PreferenceCategory>
 
     <SwitchPreferenceCompat

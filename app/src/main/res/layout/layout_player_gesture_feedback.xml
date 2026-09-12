@@ -1,34 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingTop="24dp">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/feedbackContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
+        android:layout_gravity="top|center_horizontal"
+        android:background="@drawable/bg_gesture_feedback"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
-        android:background="@drawable/bg_gesture_feedback"
-        android:animateLayoutChanges="true"
-        android:minWidth="0dp"
-        android:maxWidth="360dp"
-        app:layout_constrainedWidth="true"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:paddingVertical="8dp">
 
         <ImageView
             android:id="@+id/feedbackIcon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_marginEnd="12dp"
             android:src="@drawable/baseline_volume_up_black_24"
             app:tint="@android:color/white"
             tools:ignore="ContentDescription" />
@@ -43,24 +34,33 @@
             app:trackCornerRadius="2dp"
             app:trackThickness="4dp" />
 
+        <ProgressBar
+            android:id="@+id/feedbackVerticalLevel"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="4dp"
+            android:layout_height="0dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:max="100"
+            android:progressDrawable="@drawable/vertical_feedback_level"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/feedbackText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
-            android:gravity="end"
-            android:minWidth="0dp"
-            android:maxLines="1"
             android:ellipsize="end"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
+            android:gravity="end"
+            android:maxLines="1"
             android:shadowColor="#80000000"
             android:shadowDx="1"
             android:shadowDy="1"
             android:shadowRadius="2"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
             tools:text="100%" />
 
     </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

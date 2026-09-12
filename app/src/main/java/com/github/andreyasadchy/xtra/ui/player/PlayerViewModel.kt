@@ -427,9 +427,12 @@ class PlayerViewModel @Inject constructor(
         }
     }
 
-    fun getVideoPosition(id: Long) {
+    fun getVideoPosition(id: Long, durationSeconds: Int, explicitPosition: Long? = null) {
         viewModelScope.launch {
-            savedPosition.value = playerRepository.getVideoPosition(id)?.position ?: 0
+            savedPosition.value = explicitPosition ?: videoResumePosition(
+                playerRepository.getVideoPosition(id)?.position,
+                durationSeconds.toLong() * 1000L,
+            )
         }
     }
 
@@ -704,7 +707,8 @@ class PlayerViewModel @Inject constructor(
 
     fun getOfflineVideoPosition(id: Int) {
         viewModelScope.launch {
-            savedOfflineVideoPosition.value = offlineRepository.getVideoById(id)?.lastWatchPosition ?: 0
+            val video = offlineRepository.getVideoById(id)
+            savedOfflineVideoPosition.value = videoResumePosition(video?.lastWatchPosition, video?.duration)
         }
     }
 

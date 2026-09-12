@@ -160,6 +160,7 @@
     <string name="api_helix_client_id">Helix client ID</string>
     <string name="api_gql_client_id">GQL client ID</string>
     <string name="playback_speed">Playback speed</string>
+    <string name="player_speed_title" tools:ignore="MissingTranslation">Speed</string>
     <string name="quality">Quality</string>
     <string name="saved_value">Saved value</string>
     <string name="video_type_archive">Past broadcast</string>
@@ -603,6 +604,16 @@
     <string name="about_thysttv_message" translatable="false">ThystTV %s\n\nA Twitch client based on Xtra, with ThystTV branding, player polish, and built-in update support.</string>
     <string name="no_updates_found">No updates found</string>
     <string name="update_available">Update available</string>
+    <string name="update_whats_new" translatable="false">What’s new</string>
+    <string name="update_download_action" translatable="false">Download update</string>
+    <string name="update_release_page" translatable="false">Release page</string>
+    <string name="update_preparing" translatable="false">Preparing download…</string>
+    <string name="update_bytes" translatable="false">%1$s of %2$s</string>
+    <string name="update_bytes_unknown" translatable="false">%1$s downloaded</string>
+    <string name="update_failed_title" translatable="false">Couldn’t prepare the update</string>
+    <string name="update_failed_message" translatable="false">Check your connection and try again, or download the APK in your browser.</string>
+    <string name="update_retry" translatable="false">Try again</string>
+    <string name="update_browser" translatable="false">Open in browser</string>
     <string name="update_message">Download latest update?</string>
     <string name="update_release_message" translatable="false">%1$s\n%2$s\n\n%3$s</string>
     <string name="downloading_update">Downloading update...</string>
@@ -779,7 +790,7 @@
     <string name="stats_all_time" translatable="false">All time</string>
     <string name="stats_range_7_days" translatable="false">7 days</string>
     <string name="stats_range_30_days" translatable="false">30 days</string>
-    <string name="stats_range_all_time" translatable="false">All</string>
+    <string name="stats_range_all_time" translatable="false">All time</string>
     <string name="current_streak" translatable="false">Current streak</string>
     <string name="longest_streak" translatable="false">Longest streak</string>
     <string name="categories_watched" translatable="false">Categories Watched</string>
@@ -807,6 +818,37 @@
     <string name="player_gestures_haptic_summary" tools:ignore="MissingTranslation">Vibrate when changing volume or brightness</string>
     <string name="player_gestures_sensitivity" tools:ignore="MissingTranslation">Sensitivity</string>
     <string name="player_gestures_zone_split" tools:ignore="MissingTranslation">Zone split</string>
+    <string name="gesture_feedback_brightness" tools:ignore="MissingTranslation">Brightness</string>
+    <string name="gesture_feedback_device_volume" tools:ignore="MissingTranslation">Device volume</string>
+    <string name="gesture_feedback_seek" tools:ignore="MissingTranslation">Seek</string>
+    <string name="gesture_feedback_playback_speed" tools:ignore="MissingTranslation">Playback speed</string>
+    <string name="gesture_feedback_pinch" tools:ignore="MissingTranslation">Pinch</string>
+    <string name="gesture_feedback_auto_brightness" tools:ignore="MissingTranslation">Auto brightness</string>
+    <string name="gesture_feedback_muted" tools:ignore="MissingTranslation">Muted</string>
+    <string name="display_mode_fit" tools:ignore="MissingTranslation">Fit</string>
+    <string name="display_mode_fill" tools:ignore="MissingTranslation">Fill</string>
+    <string name="display_mode_stretch" tools:ignore="MissingTranslation">Stretch</string>
+    <string name="display_mode" tools:ignore="MissingTranslation">Display mode</string>
+    <string name="stream_volume" tools:ignore="MissingTranslation">Stream volume</string>
+    <string name="more_group_stream" tools:ignore="MissingTranslation">Stream</string>
+    <string name="more_group_chat" tools:ignore="MissingTranslation">Chat</string>
+    <string name="more_group_playback" tools:ignore="MissingTranslation">Playback</string>
+    <string name="more_group_help" tools:ignore="MissingTranslation">Help</string>
+    <string name="more_player_gestures" tools:ignore="MissingTranslation">Player gestures</string>
+    <string name="player_gesture_guide_title" tools:ignore="MissingTranslation">Player gestures</string>
+    <string name="player_gesture_guide_got_it" tools:ignore="MissingTranslation">Got it</string>
+    <string name="player_gesture_guide_settings_summary" tools:ignore="MissingTranslation">Show the player gesture guide</string>
+    <string name="gesture_row_brightness" tools:ignore="MissingTranslation">Left vertical</string>
+    <string name="gesture_row_device_volume" tools:ignore="MissingTranslation">Right vertical</string>
+    <string name="gesture_row_seek" tools:ignore="MissingTranslation">Lower horizontal</string>
+    <string name="gesture_row_playback_speed" tools:ignore="MissingTranslation">Upper horizontal</string>
+    <string name="gesture_row_pinch" tools:ignore="MissingTranslation">Pinch</string>
+    <string name="gesture_row_double_tap" tools:ignore="MissingTranslation">Double tap</string>
+    <string name="gesture_action_seek_settings" tools:ignore="MissingTranslation">Seek on VODs and seekable videos</string>
+    <string name="gesture_action_playback_speed_settings" tools:ignore="MissingTranslation">Playback speed on supported non-live media</string>
+    <string name="gesture_action_pinch" tools:ignore="MissingTranslation">Fit / Fill</string>
+    <string name="gesture_action_toggle_chat" tools:ignore="MissingTranslation">Toggle chat</string>
+    <string name="pinch_hint" tools:ignore="MissingTranslation">Pinch to fit or fill video</string>
     <string name="less_rounded_corners">Less rounded</string>
     <string name="reduced_padding">Reduced padding</string>
     <string name="compact_text">Compact text</string>
@@ -819,4 +861,18 @@
     <string name="external_tv_login_message">To get access to all features, you need to login as an Android TV device.\n\nFollow these steps:\n• Copy the code shown on the screen.\n• Press the \"Open URL\" button.\n• Enter the code and press \"Activate\".\n• Press \"Authorize\".\n• Return to Xtra and press \"Next\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
     <string name="account">Account</string>
+    <string name="close">Close</string>
+    <!-- New updater captions intentionally use English fallback until translated. -->
+    <string name="update_preparing_install" tools:ignore="MissingTranslation">Preparing installation</string>
+    <string name="update_waiting_installer" tools:ignore="MissingTranslation">Waiting for Android installer</string>
+    <string name="update_keep_open" tools:ignore="MissingTranslation">Installation will continue when you return to this screen.</string>
+    <string name="update_permission_title" tools:ignore="MissingTranslation">Allow app updates</string>
+    <string name="update_permission_message" tools:ignore="MissingTranslation">Allow this app to install updates in Android settings, then return here. Your downloaded update will be kept while this app stays running.</string>
+    <string name="update_open_settings" tools:ignore="MissingTranslation">Open settings</string>
+    <string name="update_settings_unavailable" tools:ignore="MissingTranslation">Android install settings are unavailable. Cancel this attempt or try again.</string>
+    <string name="update_finish_install_title" tools:ignore="MissingTranslation">Finish installation</string>
+    <string name="update_finish_install_message" tools:ignore="MissingTranslation">Complete the Android installer to update this app. You can reopen its confirmation screen or cancel this attempt.</string>
+    <string name="update_continue_install" tools:ignore="MissingTranslation">Open installer</string>
+    <string name="update_invalid_callback" tools:ignore="MissingTranslation">Android returned an unexpected installation response. Nothing was opened. Retry or download the update in your browser.</string>
+    <string name="update_installer_timeout" tools:ignore="MissingTranslation">Android did not confirm the installation request. Retry or download the update in your browser.</string>
 </resources>

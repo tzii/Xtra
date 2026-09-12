@@ -51,13 +51,6 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="true"
-        android:key="player_aspect"
-        android:title="@string/aspect_ratio"
-        android:icon="@drawable/baseline_aspect_ratio_black_24"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="true"
         android:key="player_speedbutton"
         android:title="@string/playback_speed"
         android:icon="@drawable/exo_ic_speed"

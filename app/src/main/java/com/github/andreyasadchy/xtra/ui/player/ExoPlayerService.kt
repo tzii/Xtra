@@ -204,6 +204,9 @@ class ExoPlayerService : Service() {
                 override fun onSeekTo(pos: Long) = player.seekTo(pos)
                 override fun onSetPlaybackSpeed(speed: Float) = player.setPlaybackSpeed(speed)
 
+                override fun onMediaButtonEvent(mediaButtonIntent: Intent): Boolean =
+                    handleMediaSeekFallback(mediaButtonIntent, super.onMediaButtonEvent(mediaButtonIntent), player)
+
                 override fun onCustomAction(action: String, extras: Bundle?) {
                     when (action) {
                         INTENT_REWIND -> player.seekBack()

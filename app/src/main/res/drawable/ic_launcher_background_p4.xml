@@ -3,38 +3,19 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-
-    <path android:pathData="M0,0H108V108H0Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="0"
-                android:startY="0"
-                android:endX="104.8"
-                android:endY="26.2">
-                <item android:offset="0" android:color="#FFF6ECFF"/>
-                <item android:offset="1" android:color="#FFD8B9F0"/>
-            </gradient>
-        </aapt:attr>
-    </path>
-
-    <path android:pathData="M35,108L62,108L85,56L58,56Z" android:fillColor="#55A47BC2" />
-    <path android:pathData="M0,0L77.76,0L47.52,25.92L0,54Z" android:fillColor="#58FFFFFF" />
-    <path android:pathData="M47.52,25.92L108,0L108,60.48L66.96,51.84Z" android:fillColor="#4C8C5CB1" />
-    <path android:pathData="M0,54L47.52,25.92L66.96,51.84L30.24,108Z" android:fillColor="#40C198D7" />
-    <path android:pathData="M30.24,108L66.96,51.84L108,60.48L108,108Z" android:fillColor="#38704F9E" />
-
-    <path android:pathData="M95.16,20.52A12.0,12.0 0 1,1 71.16,20.52A12.0,12.0 0 1,1 95.16,20.52Z">
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <!-- Matches docs/images/icons/launcher/background.svg in both background resources. -->
+    <path android:pathData="M0,0 H256 V256 H0 Z">
         <aapt:attr name="android:fillColor">
             <gradient
                 android:type="radial"
-                android:centerX="83.16"
-                android:centerY="20.52"
-                android:gradientRadius="12.0">
-                <item android:offset="0" android:color="#38FFFFFF"/>
-                <item android:offset="1" android:color="#00FFFFFF"/>
+                android:centerX="112"
+                android:centerY="100"
+                android:gradientRadius="160">
+                <item android:offset="0" android:color="#211832" />
+                <item android:offset="0.55" android:color="#14101F" />
+                <item android:offset="1" android:color="#0B0912" />
             </gradient>
         </aapt:attr>
     </path>

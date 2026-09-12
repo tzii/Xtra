@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" fill="none">
+  <title>ThystTV launcher background</title>
+  <desc>Opaque near-black violet with a subtle radial lift above and left of center.</desc>
+  <defs>
+    <radialGradient id="background-lift" cx="112" cy="100" r="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#211832" />
+      <stop offset="0.55" stop-color="#14101F" />
+      <stop offset="1" stop-color="#0B0912" />
+    </radialGradient>
+  </defs>
+  <path fill="url(#background-lift)" d="M0,0 H256 V256 H0 Z" />
+</svg>

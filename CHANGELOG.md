@@ -4,6 +4,37 @@ All notable changes to ThystTV should be documented here.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-11
+
+### Added
+- Consistent Quality, Speed, Stream volume and More player overlays with fixed headers and reachable options.
+- Canonical Fit/Fill/Stretch landscape display modes, pinch feedback and a playback gesture guide.
+- Live status and stream entry points in channel search and profiles.
+
+### Changed
+- Improved tablet mini-player sizing, gesture feedback and stable Quality gear behavior through rotation.
+- Redesigned compact Stats cards and improved chart scales, range controls and animation interruption.
+- Refreshed adaptive, themed and legacy gem launcher artwork.
+- Refreshed the update prompt with clear version details, rendered release notes and fixed actions that reflow at large text sizes.
+- Shared retained download/installer state across updater entry points, with pause/recreation recovery, cancel/retry and browser fallback.
+- Updater dialogs follow host-window resizing and request install permission when needed.
+
+### Fixed
+- Restored correctly encoded translations across 13 locales after a source-edit encoding regression.
+- Released the landscape system-UI listener when a player closes or its view is destroyed.
+- Kept high-speed network/downloaded VoD chat replay responsive and preserved appended followed-channel pages.
+- Restored native Twitch autocomplete suggestions and synchronized suggestion snapshots during refresh.
+- Restarted completed saved videos at zero while preserving unfinished positions and explicit timestamps.
+- Handled unclaimed legacy headset previous/next buttons once per press.
+- Rendered compact Markdown headings and displayed destination hosts on channel social links.
+
+### Security
+- Replaced exported installer-intent forwarding with a private callback receiver, per-attempt session identity and validated system confirmation handoff.
+
+### Release tooling
+- Added native Windows verifier coverage and corrected SDK batch launcher handling.
+- Version 1.3.0 uses version code 12. Full scope and upgrade notes: `docs/release-notes/1.3.0.md`.
+
 ## [1.2.1] - 2026-08-10
 
 ### Fixed

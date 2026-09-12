@@ -53,3 +53,16 @@ Screenshots, videos, logs, or APK links:
 ## Known Issues / Deferred QA
 
 -
+
+
+## 1.3 release checks
+
+- During an updater download, cancel/retry and rotate/background/restore; one current
+  attempt should remain and stale work must not launch an installer.
+- Interrupt a transfer and verify retry/browser recovery. Deny/grant install permission;
+  cancel/confirm the OS installer without an automatic reopening loop.
+- Check Markdown, action reachability and scrolling at 200% text and in resized windows.
+- Process death requires a fresh explicit attempt; do not expect download resumption.
+- Test an exact signed 1.3 APK upgrading official 1.2.1, retaining data and migrating
+  landscape display mode. Repeat the player, gestures, floating chat, Stats and launcher
+  matrix on that same candidate. See RELEASE_1_3_REVIEW.md and RELEASE_PROCESS.md.

@@ -1,189 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@android:color/transparent">
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/updateSheet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardBackgroundColor="?attr/colorSurfaceContainer"
-        app:cardCornerRadius="28dp"
-        app:cardElevation="0dp"
-        app:contentPaddingBottom="22dp"
-        app:contentPaddingLeft="20dp"
-        app:contentPaddingRight="20dp"
-        app:contentPaddingTop="14dp"
-        app:strokeColor="?attr/colorOutlineVariant"
-        app:strokeWidth="1dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <View
-                android:layout_width="42dp"
-                android:layout_height="4dp"
-                android:layout_marginBottom="18dp"
-                android:background="@drawable/bg_player_speed_handle" />
-
-            <TextView
-                android:id="@+id/updateTitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:text="@string/update_available"
-                android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                android:textStyle="bold" />
-
-            <com.github.andreyasadchy.xtra.ui.view.SquiggleDividerView
-                android:id="@+id/updateSquiggle"
-                android:layout_width="match_parent"
-                android:layout_height="28dp"
-                android:layout_marginStart="34dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="34dp"
-                android:layout_marginBottom="14dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/updateVersionChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_player_speed_preset"
-                    android:includeFontPadding="false"
-                    android:minHeight="34dp"
-                    android:paddingStart="15dp"
-                    android:paddingTop="8dp"
-                    android:paddingEnd="15dp"
-                    android:paddingBottom="8dp"
-                    android:textAppearance="?attr/textAppearanceLabelLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="v2.6.0" />
-
-                <TextView
-                    android:id="@+id/updateDate"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="14dp"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?android:attr/textColorSecondary"
-                    tools:text="2026-04-26" />
+    android:id="@+id/updateSheet" android:layout_width="match_parent" android:layout_height="wrap_content"
+    app:cardBackgroundColor="?attr/colorSurfaceContainer" app:cardCornerRadius="28dp" app:cardElevation="0dp">
+    <com.github.andreyasadchy.xtra.ui.common.UpdateSheetLayout
+        android:id="@+id/updateSheetContent"
+        android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+        <androidx.core.widget.NestedScrollView android:id="@+id/releaseNotesScroll"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_weight="1"
+            android:clipToPadding="false" android:overScrollMode="ifContentScrolls" android:paddingBottom="16dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <androidx.appcompat.widget.AppCompatImageView android:layout_width="40dp" android:layout_height="40dp"
+                    android:layout_marginBottom="12dp" android:importantForAccessibility="no"
+                    android:src="@drawable/baseline_file_download_24" app:tint="?attr/colorPrimary" />
+                <TextView android:id="@+id/updateTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/update_available"
+                    android:textSize="26sp" android:textStyle="bold" android:textColor="?attr/colorOnSurface" />
+                <TextView android:id="@+id/updateVersionChip" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" android:textSize="16sp" android:textStyle="bold" android:textColor="?attr/colorPrimary" />
+                <TextView android:id="@+id/updateCurrentVersion" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView android:id="@+id/updateDate" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" android:textSize="13sp" android:textColor="?attr/colorOnSurfaceVariant" />
+                <TextView android:id="@+id/updateNotesTitle" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp" android:layout_marginBottom="8dp"
+                    android:text="@string/update_whats_new" android:textSize="16sp" android:textStyle="bold" android:textColor="?attr/colorOnSurface" />
+                <TextView android:id="@+id/releaseNotesText" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textSize="14sp" android:lineSpacingExtra="3dp" android:textColor="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
-
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/releaseNotesCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                app:cardBackgroundColor="?attr/colorSurfaceContainerHigh"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="0dp"
-                app:strokeColor="?attr/colorOutlineVariant"
-                app:strokeWidth="1dp">
-
-                <androidx.core.widget.NestedScrollView
-                    android:id="@+id/releaseNotesScroll"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clipToPadding="false"
-                    android:fillViewport="false"
-                    android:overScrollMode="ifContentScrolls"
-                    android:padding="16dp"
-                    android:scrollbarStyle="outsideOverlay">
-
-                    <TextView
-                        android:id="@+id/releaseNotesText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceBodyLarge"
-                        android:textColor="?android:attr/textColorPrimary"
-                        tools:text="## Bug fixes&#10;&#10;- Fixed updater prompt layout" />
-                </androidx.core.widget.NestedScrollView>
-            </com.google.android.material.card.MaterialCardView>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="104dp"
-                android:layout_marginTop="14dp">
-
-                <LinearLayout
-                    android:id="@+id/secondaryActions"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|start"
-                    android:gravity="start"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/githubButton"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="44dp"
-                        android:minWidth="0dp"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:text="@string/view_on_github"
-                        android:textAllCaps="false"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        app:backgroundTint="@android:color/transparent"
-                        app:cornerRadius="22dp"
-                        app:icon="@drawable/baseline_open_in_new_24"
-                        app:iconGravity="textStart"
-                        app:iconPadding="8dp"
-                        app:iconTint="?attr/colorOnSurfaceVariant"
-                        app:strokeColor="?attr/colorOutlineVariant" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/laterButton"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="44dp"
-                        android:layout_marginTop="4dp"
-                        android:minWidth="0dp"
-                        android:paddingStart="18dp"
-                        android:paddingEnd="18dp"
-                        android:text="@string/later"
-                        android:textAllCaps="false"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        app:backgroundTint="@android:color/transparent"
-                        app:cornerRadius="22dp"
-                        app:strokeColor="?attr/colorOutlineVariant" />
-                </LinearLayout>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/downloadButton"
-                    style="@style/Widget.MaterialComponents.Button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="56dp"
-                    android:layout_gravity="bottom|end"
-                    android:minWidth="96dp"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="24dp"
-                    android:text="@string/download"
-                    android:textAllCaps="false"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    app:backgroundTint="?attr/colorPrimaryContainer"
-                    app:cornerRadius="28dp"
-                    app:elevation="0dp"
-                    app:icon="@drawable/baseline_file_download_24"
-                    app:iconGravity="textStart"
-                    app:iconPadding="10dp"
-                    app:iconTint="?attr/colorOnPrimaryContainer" />
-            </FrameLayout>
+        </androidx.core.widget.NestedScrollView>
+        <com.google.android.material.button.MaterialButton android:id="@+id/downloadButton"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="56dp"
+            android:paddingTop="12dp" android:paddingBottom="12dp" android:text="@string/update_download_action"
+            android:textAllCaps="false" app:cornerRadius="28dp" app:icon="@drawable/baseline_file_download_24"
+            app:iconGravity="textStart" app:iconPadding="8dp" />
+        <LinearLayout android:id="@+id/secondaryActions" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:layout_marginTop="4dp">
+            <com.google.android.material.button.MaterialButton android:id="@+id/laterButton" style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="48dp" android:minWidth="0dp" android:text="@string/later" android:textAllCaps="false" />
+            <com.google.android.material.button.MaterialButton android:id="@+id/githubButton" style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:minHeight="48dp" android:minWidth="0dp" android:text="@string/update_release_page" android:textAllCaps="false"
+                app:icon="@drawable/baseline_open_in_new_24" app:iconGravity="textStart" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-</FrameLayout>
+    </com.github.andreyasadchy.xtra.ui.common.UpdateSheetLayout>
+</com.google.android.material.card.MaterialCardView>

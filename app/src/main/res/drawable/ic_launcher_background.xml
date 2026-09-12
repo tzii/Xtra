@@ -1,26 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="256"
     android:viewportHeight="256">
-    <path
-        android:fillColor="#e5cff6"
-        android:pathData="M0,0h256v256h-256z" />
-    <path
-        android:fillColor="#ffffff"
-        android:fillAlpha="0.38"
-        android:pathData="M128,128 L0,0 L128,0 Z" />
-    <path
-        android:fillColor="#8c5cb1"
-        android:fillAlpha="0.18"
-        android:pathData="M128,128 L256,0 L256,128 Z" />
-    <path
-        android:fillColor="#704f9e"
-        android:fillAlpha="0.2"
-        android:pathData="M128,128 L256,256 L128,256 Z" />
-    <path
-        android:fillColor="#c198d7"
-        android:fillAlpha="0.24"
-        android:pathData="M128,128 L0,256 L0,128 Z" />
+    <!-- Matches docs/images/icons/launcher/background.svg in both background resources. -->
+    <path android:pathData="M0,0 H256 V256 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="112"
+                android:centerY="100"
+                android:gradientRadius="160">
+                <item android:offset="0" android:color="#211832" />
+                <item android:offset="0.55" android:color="#14101F" />
+                <item android:offset="1" android:color="#0B0912" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>
