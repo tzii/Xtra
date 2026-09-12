@@ -28,6 +28,7 @@ jobs:
       - name: Run repository contract tests
         run: |
           node --test docs/site.test.js .github/workflows/release.test.mjs scripts/release/*.test.mjs
+          python3 scripts/check-updater-contracts.py
           bash -n scripts/release/verify-apk.sh
 
       - name: Set up Gradle

@@ -30,7 +30,8 @@ class AutoCompleteAdapter<T>(
     objects: MutableList<T?>
 ): ArrayAdapter<T?>(context, resource, textViewResourceId) {
 
-    private val mLock = Any()
+    // ViewModel producers synchronize on this shared source list too.
+    private val mLock = objects
     private var mObjects = objects
     private var mOriginalValues: MutableList<T?>? = null
     private var mNotifyOnChange = true
@@ -79,7 +80,7 @@ class AutoCompleteAdapter<T>(
                 FilterResults()
             } else {
                 val list = synchronized(mLock) {
-                    mOriginalValues ?: mObjects.also { mOriginalValues = it }
+                    (mOriginalValues ?: mObjects.also { mOriginalValues = it }).toList()
                 }
                 val regex = constraint.map {
                     "${Pattern.quote(it.lowercase())}\\S*?"

@@ -1,10 +1,8 @@
 package com.github.andreyasadchy.xtra.ui.main
 
 import android.app.Activity
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageInstaller
 import android.net.http.HttpEngine
 import android.os.Build
 import android.os.ext.SdkExtensions
@@ -42,12 +40,21 @@ import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.UpdateUtils
 import com.github.andreyasadchy.xtra.util.getByteArrayCronetCallback
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.github.andreyasadchy.xtra.util.update.UpdateCheckMailbox
+import com.github.andreyasadchy.xtra.util.update.UpdateHost
+import com.github.andreyasadchy.xtra.util.update.UpdateManager
+import com.github.andreyasadchy.xtra.util.update.UpdateRequest
 import dagger.Lazy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.io.FileOutputStream
+import java.util.Timer
+import java.util.concurrent.ExecutorService
+import javax.inject.Inject
+import kotlin.math.max
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -55,17 +62,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import org.chromium.net.CronetEngine
 import org.chromium.net.apihelpers.RedirectHandlers
 import org.chromium.net.apihelpers.UrlRequestCallbacks
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.util.Timer
-import java.util.concurrent.ExecutorService
-import javax.inject.Inject
-import kotlin.math.max
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -79,6 +78,7 @@ class MainViewModel @Inject constructor(
     private val cronetEngine: Lazy<CronetEngine>?,
     private val cronetExecutor: ExecutorService,
     private val okHttpClient: OkHttpClient,
+    val updater: UpdateManager,
     private val json: Json,
 ) : ViewModel() {
 
@@ -98,11 +98,7 @@ class MainViewModel @Inject constructor(
     val game = MutableStateFlow<Pair<Game?, String?>?>(null)
     val tag = MutableStateFlow<Tag?>(null)
 
-    val updateUrl = MutableSharedFlow<UpdateInfo?>()
-    val updateProgress = MutableSharedFlow<Long>()
-    val closeUpdateDialog = MutableSharedFlow<Unit>()
-    var updateSize: Long? = null
-    var updateJob: Job? = null
+    val updateChecks = UpdateCheckMailbox<UpdateInfo?>()
 
     fun loadVideo(videoId: String?, offset: Long?, networkLibrary: String?, gqlHeaders: Map<String, String>, helixHeaders: Map<String, String>, enableIntegrity: Boolean) {
         if (video.value == null) {
@@ -891,8 +887,9 @@ class MainViewModel @Inject constructor(
     }
 
     fun checkUpdates(networkLibrary: String?, url: String) {
+        val requestId = updateChecks.begin()
         viewModelScope.launch(Dispatchers.IO) {
-            updateUrl.emit(
+            updateChecks.publish(requestId,
                 try {
                     val response = when {
                         networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
@@ -922,6 +919,7 @@ class MainViewModel @Inject constructor(
                     }
                     UpdateUtils.getAvailableUpdate(response, BuildConfig.VERSION_NAME)
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     null
                 }
             )
@@ -930,97 +928,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun downloadUpdate(networkLibrary: String?, url: String) {
-        updateJob?.cancel()
-        updateSize = null
-        updateJob = viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = when {
-                    networkLibrary == "HttpEngine" && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && SdkExtensions.getExtensionVersion(Build.VERSION_CODES.S) >= 7 && httpEngine != null -> {
-                        val response = suspendCancellableCoroutine { continuation ->
-                            httpEngine.get().newUrlRequestBuilder(url, cronetExecutor, HttpEngineUtils.byteArrayUrlCallback(continuation)).build().start()
-                        }
-                        if (response.first.httpStatusCode in 200..299) {
-                            updateSize = response.first.headers.asMap["Content-Length"]?.firstOrNull()?.toLongOrNull()
-                            updateProgress.emit(response.second.size.toLong())
-                            response.second
-                        } else null
-                    }
-                    networkLibrary == "Cronet" && cronetEngine != null -> {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            val request = UrlRequestCallbacks.forByteArrayBody(RedirectHandlers.alwaysFollow())
-                            cronetEngine.get().newUrlRequestBuilder(url, request.callback, cronetExecutor).build().start()
-                            val response = request.future.get()
-                            if (response.urlResponseInfo.httpStatusCode in 200..299) {
-                                (response.responseBody as ByteArray).also {
-                                    updateSize = response.urlResponseInfo.allHeaders["Content-Length"]?.firstOrNull()?.toLongOrNull()
-                                    updateProgress.emit(it.size.toLong())
-                                }
-                            } else null
-                        } else {
-                            val response = suspendCancellableCoroutine { continuation ->
-                                cronetEngine.get().newUrlRequestBuilder(url, getByteArrayCronetCallback(continuation), cronetExecutor).build().start()
-                            }
-                            if (response.first.httpStatusCode in 200..299) {
-                                updateSize = response.first.allHeaders["Content-Length"]?.firstOrNull()?.toLongOrNull()
-                                updateProgress.emit(response.second.size.toLong())
-                                response.second
-                            } else null
-                        }
-                    }
-                    else -> {
-                        okHttpClient.newCall(Request.Builder().url(url).build()).execute().use { response ->
-                            if (response.isSuccessful) {
-                                readUpdateResponseBody(response)
-                            } else null
-                        }
-                    }
-                }
-                if (response != null && response.isNotEmpty()) {
-                    val packageInstaller = applicationContext.packageManager.packageInstaller
-                    val sessionId = packageInstaller.createSession(
-                        PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL)
-                    )
-                    val session = packageInstaller.openSession(sessionId)
-                    session.openWrite("package", 0, response.size.toLong()).use {
-                        it.write(response)
-                    }
-                    session.commit(
-                        PendingIntent.getActivity(
-                            applicationContext,
-                            0,
-                            Intent(applicationContext, MainActivity::class.java).apply {
-                                setAction(MainActivity.INTENT_INSTALL_UPDATE)
-                            },
-                            PendingIntent.FLAG_MUTABLE
-                        ).intentSender
-                    )
-                    session.close()
-                }
-            } catch (e: Exception) {
-
-            } finally {
-                updateJob = null
-                closeUpdateDialog.emit(Unit)
-            }
-        }
-    }
-
-    private suspend fun readUpdateResponseBody(response: Response): ByteArray {
-        updateSize = response.body.contentLength().takeIf { it > 0L }
-        return ByteArrayOutputStream(updateSize?.takeIf { it <= Int.MAX_VALUE }?.toInt() ?: 32 * 1024).use { output ->
-            response.body.byteStream().use { input ->
-                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                var totalRead = 0L
-                while (true) {
-                    val read = input.read(buffer)
-                    if (read == -1) break
-                    output.write(buffer, 0, read)
-                    totalRead += read
-                    updateProgress.emit(totalRead)
-                }
-            }
-            output.toByteArray()
-        }
+        updater.start(UpdateRequest(url, networkLibrary, UpdateHost.MAIN))
     }
 
     fun deleteOldImages() {

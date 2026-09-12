@@ -52,15 +52,8 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
-        android:key="player_menu_aspect"
-        android:title="@string/aspect_ratio"
-        app:iconSpaceReserved="false"
-        app:singleLineTitle="false" />
-
-    <SwitchPreferenceCompat
-        android:defaultValue="false"
         android:key="player_menu_volume"
-        android:title="@string/volume"
+        android:title="@string/stream_volume"
         app:iconSpaceReserved="false"
         app:singleLineTitle="false" />
 

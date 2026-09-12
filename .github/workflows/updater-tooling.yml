@@ -1,0 +1,38 @@
+name: Updater tooling portability
+
+on:
+  pull_request:
+    branches: ["master"]
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verifier-fixtures:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # Existing repository pin
+        with:
+          persist-credentials: false
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # Existing repository pin
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Run verifier fixtures on the native host
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            export THYSTTV_GIT_BASH="$(cygpath -w "$(command -v bash)")"
+          fi
+          node --version
+          node --test scripts/release/verify-apk.test.mjs
+          bash -n scripts/release/verify-apk.sh

@@ -34,7 +34,7 @@
             android:layout_marginBottom="7dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/layout2"
+            app:layout_constraintEnd_toStartOf="@id/watchLive"
             app:layout_constraintStart_toEndOf="@id/userImage"
             app:layout_constraintTop_toTopOf="parent">
 
@@ -48,39 +48,64 @@
                 tools:visibility="visible" />
 
             <TextView
+                android:id="@+id/streamTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:visibility="gone"
+                tools:text="Ranked grind until 5k MMR !!road to ti"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/streamGame"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="Dota 2"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/streamViewers"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorSecondary"
+                android:visibility="gone"
+                tools:text="13.3K viewers"
+                tools:visibility="visible" />
+
+            <TextView
                 android:id="@+id/userFollowers"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?android:attr/textColorSecondary"
                 android:visibility="gone"
-                tools:text="123456 viewers"
+                tools:text="123456 followers"
                 tools:visibility="visible" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/layout2"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/watchLive"
+            style="@style/LiveWatchPill"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="7dp"
-            android:layout_marginEnd="7dp"
-            android:layout_marginBottom="10dp"
-            android:gravity="end"
-            android:orientation="vertical"
+            android:layout_marginEnd="10dp"
+            android:text="@string/live"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/layout1"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/typeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:visibility="gone"
-                tools:text="@string/live"
-                tools:visibility="visible" />
-        </LinearLayout>
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Live"
+            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

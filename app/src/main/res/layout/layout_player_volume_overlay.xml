@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/volumeOverlayCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:cardBackgroundColor="@android:color/black"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="4dp"
+    app:contentPaddingLeft="16dp"
+    app:contentPaddingTop="16dp"
+    app:contentPaddingRight="16dp"
+    app:contentPaddingBottom="16dp"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/volumeOverlayTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:includeFontPadding="false"
+            android:text="@string/stream_volume"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/volumeOverlayMute"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="?android:selectableItemBackgroundBorderless"
+                android:contentDescription="@string/volume"
+                android:src="@drawable/baseline_volume_up_black_24"
+                app:tint="@android:color/white" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/volumeOverlaySlider"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="18dp"
+                android:layout_marginEnd="18dp"
+                android:layout_weight="1"
+                android:stepSize="1"
+                android:valueFrom="0"
+                android:valueTo="100"
+                app:labelBehavior="gone"
+                app:thumbColor="@android:color/white"
+                app:trackColorActive="@android:color/white"
+                app:trackColorInactive="#4DFFFFFF" />
+
+            <TextView
+                android:id="@+id/volumeOverlayPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:minWidth="48dp"
+                android:textColor="@android:color/white"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                tools:text="65%" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

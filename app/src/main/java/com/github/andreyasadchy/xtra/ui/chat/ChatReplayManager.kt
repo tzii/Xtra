@@ -200,7 +200,7 @@ class ChatReplayManager(
                             currentPosition < messageOffset
                         }
                     ) {
-                        delay(max((messageOffset - currentPosition).div(playbackSpeed ?: 1f).toLong(), 0))
+                        delay(chatReplayDelayMillis(messageOffset - currentPosition, playbackSpeed))
                     }
                     if (!isActive) {
                         break

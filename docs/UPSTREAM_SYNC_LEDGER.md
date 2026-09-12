@@ -165,3 +165,22 @@ git cherry -v master upstream/master
 Then review each new `+` commit with `git show --stat <sha>` / `git show <sha>`, classify it
 (safe to take / manual port / defer / reject), and append a dated section here. Keep the
 "latest audit" header current.
+
+
+## ThystTV 1.3 selected ports
+
+The following upstream changes are manually adapted to ThystTV's Hilt and player
+architecture. These entries supersede earlier deferrals only for the named scopes.
+
+| Upstream commit | Included adaptation |
+| --- | --- |
+| `17587ada8efc562fcb3a36cad6b133e79c01e00f` | Minimum 1ms replay delay in network and downloaded chat loops, preserving millisecond timing. |
+| `9500c9c532ef38cadccb0be835b386f461106899` | Retain fetched followed channels on appended pages while preserving enrichment and cursor behavior. |
+| `5e7f6a466fbbdab7967f6a2f8533c88ea993ba67` | Populate/refresh native Twitch autocomplete, preserve third-party/chatter entries, and filter a synchronized snapshot. |
+| `f10e3abfcd4c1496a90ee52283d5c228eb7577d6` | Show destination host beside social titles while preserving URL/open behavior; host text does not establish trust. |
+| `f5f03a1aa0b4e4c0da6950084f513ea69cd0c1da` | Legacy ExoPlayer previous/next fallback: honor handled events and reject key-up/cancelled or unavailable seek actions. |
+| `e4299f7d1e7e2bdce90f9ea1e6e3545539f37c34` | Restart completed automatic resumes, preserving unknown durations, explicit timestamps and active-session restoration; omit adapter/layout rewrites. |
+| `a6dcee1856e2e85ada5304cb114bae31173e59e1` | Compact channel/team Markdown headings with corrected exclusive-end handling and standard/code/link/container preservation. |
+
+Quality-identity/bitrate, proxy, dependency, DI and playback-service migrations are
+not included. See RELEASE_1_3_REVIEW.md for the complete release review map.

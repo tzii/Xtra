@@ -12,9 +12,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.ext.SdkExtensions
-import android.provider.Settings
 import android.text.method.LinkMovementMethod
-import android.text.format.Formatter
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -25,7 +23,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.SearchView
@@ -66,7 +64,6 @@ import com.github.andreyasadchy.xtra.BuildConfig
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.SettingsNavGraphDirections
 import com.github.andreyasadchy.xtra.databinding.ActivitySettingsBinding
-import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.databinding.FragmentChangelogSettingsBinding
 import com.github.andreyasadchy.xtra.model.ui.ReleaseInfo
 import com.github.andreyasadchy.xtra.model.ui.SettingsDragListItem
@@ -74,6 +71,9 @@ import com.github.andreyasadchy.xtra.model.ui.SettingsSearchItem
 import com.github.andreyasadchy.xtra.model.ui.UpdateInfo
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.UpdateAvailableDialog
+import com.github.andreyasadchy.xtra.ui.common.UpdateDialogController
+import com.github.andreyasadchy.xtra.ui.player.PlayerGestureGuideContext
+import com.github.andreyasadchy.xtra.ui.player.PlayerGestureGuideDialog
 import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.UpdateUtils
@@ -81,6 +81,7 @@ import com.github.andreyasadchy.xtra.util.applyTheme
 import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.github.andreyasadchy.xtra.util.update.UpdateHost
 import com.google.android.material.appbar.AppBarLayout
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
@@ -89,13 +90,13 @@ import com.google.mlkit.nl.translate.TranslateRemoteModel
 import dagger.hilt.android.AndroidEntryPoint
 import io.noties.markwon.Markwon
 import io.noties.markwon.linkify.LinkifyPlugin
+import java.util.Collections
+import java.util.Locale
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.chromium.net.CronetProvider
-import java.util.Collections
-import java.util.Locale
 
 private fun renderMarkdown(textView: TextView, markdown: String) {
     Markwon.builder(textView.context)
@@ -125,6 +126,7 @@ private fun buildReleaseMarkdown(context: Context, releaseInfo: ReleaseInfo): St
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
 
+    private val updateViewModel: SettingsViewModel by viewModels()
     private lateinit var binding: ActivitySettingsBinding
     private var changed = false
     var searchItem: String? = null
@@ -137,6 +139,7 @@ class SettingsActivity : AppCompatActivity() {
         applyTheme()
         binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        UpdateDialogController(this, updateViewModel.updater, UpdateHost.SETTINGS)
         val ignoreCutouts = prefs().getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
@@ -291,8 +294,6 @@ class SettingsActivity : AppCompatActivity() {
         private val viewModel: SettingsViewModel by activityViewModels()
         private var backupResultLauncher: ActivityResultLauncher<Intent>? = null
         private var restoreResultLauncher: ActivityResultLauncher<Intent>? = null
-        private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
-        private var updateDownloadDialog: AlertDialog? = null
 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
@@ -521,23 +522,11 @@ class SettingsActivity : AppCompatActivity() {
             }
             (requireActivity() as? SettingsActivity)?.getSelectedSearchItem()?.let { scrollToPreference(it) }
             viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.updateUrl.collectLatest {
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    viewModel.updateChecks.state.collectLatest { result ->
+                        if (result == null || !viewModel.updateChecks.consume(result)) return@collectLatest
+                        val it = result.value
                         if (it != null) {
-                            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                                !requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false) &&
-                                !requireContext().packageManager.canRequestPackageInstalls()
-                            ) {
-                                try {
-                                    val intent = Intent(
-                                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                                        "package:${requireContext().packageName}".toUri()
-                                    )
-                                    startActivity(intent)
-                                } catch (e: ActivityNotFoundException) {
-
-                                }
-                            }
                             showUpdateDialog(it)
                         } else {
                             Toast.makeText(requireContext(), R.string.no_updates_found, Toast.LENGTH_LONG).show()
@@ -555,22 +544,6 @@ class SettingsActivity : AppCompatActivity() {
                             isVisible = updateInfo != null
                             summary = updateInfo?.versionName
                         }
-                    }
-                }
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.updateProgress.collectLatest { bytesRead ->
-                        updateDownloadDialogBinding?.let { binding ->
-                            updateDownloadDialogText(binding, bytesRead)
-                        }
-                    }
-                }
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.closeUpdateDialog.collectLatest {
-                        updateDownloadDialog?.dismiss()
                     }
                 }
             }
@@ -616,36 +589,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun showUpdateDownloadDialog(downloadUrl: String) {
-            val binding = DialogUpdateDownloadBinding.inflate(layoutInflater)
-            updateDownloadDialogBinding = binding
-            updateDownloadDialogText(binding, 0L)
             viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), downloadUrl)
-            updateDownloadDialog = requireActivity().getAlertDialogBuilder()
-                .setView(binding.root)
-                .setNegativeButton(getString(android.R.string.cancel), null)
-                .setOnDismissListener {
-                    viewModel.updateJob?.cancel()
-                    updateDownloadDialogBinding = null
-                    updateDownloadDialog = null
-                }
-                .show()
-        }
-
-        private fun updateDownloadDialogText(binding: DialogUpdateDownloadBinding, bytesRead: Long) {
-            val size = viewModel.updateSize
-            val percent = UpdateUtils.downloadProgressPercent(bytesRead, size)
-            if (size != null && percent != null) {
-                binding.textView.text = getString(
-                    R.string.downloading_update_progress,
-                    Formatter.formatFileSize(requireContext(), bytesRead),
-                    Formatter.formatFileSize(requireContext(), size),
-                )
-                binding.progressBar.isIndeterminate = false
-                binding.progressBar.progress = percent
-            } else {
-                binding.textView.text = getString(R.string.downloading_update)
-                binding.progressBar.isIndeterminate = true
-            }
         }
 
         private fun openUpdateUrl(url: String, markChecked: Boolean) {
@@ -1109,6 +1053,11 @@ class SettingsActivity : AppCompatActivity() {
                     .show()
                 true
             }
+            findPreference<Preference>("player_gesture_guide")?.setOnPreferenceClickListener {
+                PlayerGestureGuideDialog.newInstance(PlayerGestureGuideContext.SETTINGS)
+                    .show(childFragmentManager, null)
+                true
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -1473,8 +1422,6 @@ class SettingsActivity : AppCompatActivity() {
         private val viewModel: SettingsViewModel by activityViewModels()
         private var _binding: FragmentChangelogSettingsBinding? = null
         private val binding get() = _binding!!
-        private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
-        private var updateDownloadDialog: AlertDialog? = null
         private var latestUpdateInfo: UpdateInfo? = null
 
         override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -1547,8 +1494,10 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
             viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.updateUrl.collectLatest { updateInfo ->
+                viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    viewModel.updateChecks.state.collectLatest { result ->
+                        if (result == null || !viewModel.updateChecks.consume(result)) return@collectLatest
+                        val updateInfo = result.value
                         if (updateInfo != null) {
                             latestUpdateInfo = updateInfo
                             bindLatestRelease(updateInfo.toReleaseInfo())
@@ -1560,20 +1509,6 @@ class SettingsActivity : AppCompatActivity() {
                                 UpdateUtils.resolveReleaseApiUrl(requireContext().prefs().getString(C.UPDATE_URL, null))
                             )
                         }
-                    }
-                }
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.updateProgress.collectLatest { bytesRead ->
-                        updateDownloadDialogBinding?.let { updateDownloadDialogText(it, bytesRead) }
-                    }
-                }
-            }
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.closeUpdateDialog.collectLatest {
-                        updateDownloadDialog?.dismiss()
                     }
                 }
             }
@@ -1641,19 +1576,6 @@ class SettingsActivity : AppCompatActivity() {
             if (requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false)) {
                 openUpdateUrl(updateInfo.downloadUrl, markChecked = true)
             } else {
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                    !requireContext().packageManager.canRequestPackageInstalls()
-                ) {
-                    try {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                            "package:${requireContext().packageName}".toUri()
-                        )
-                        startActivity(intent)
-                    } catch (e: ActivityNotFoundException) {
-
-                    }
-                }
                 requireContext().tokenPrefs().edit {
                     putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
                 }
@@ -1662,36 +1584,7 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         private fun showUpdateDownloadDialog(downloadUrl: String) {
-            val binding = DialogUpdateDownloadBinding.inflate(layoutInflater)
-            updateDownloadDialogBinding = binding
-            updateDownloadDialogText(binding, 0L)
             viewModel.downloadUpdate(requireContext().prefs().getString(C.NETWORK_LIBRARY, "OkHttp"), downloadUrl)
-            updateDownloadDialog = requireActivity().getAlertDialogBuilder()
-                .setView(binding.root)
-                .setNegativeButton(getString(android.R.string.cancel), null)
-                .setOnDismissListener {
-                    viewModel.updateJob?.cancel()
-                    updateDownloadDialogBinding = null
-                    updateDownloadDialog = null
-                }
-                .show()
-        }
-
-        private fun updateDownloadDialogText(binding: DialogUpdateDownloadBinding, bytesRead: Long) {
-            val size = viewModel.updateSize
-            val percent = UpdateUtils.downloadProgressPercent(bytesRead, size)
-            if (size != null && percent != null) {
-                binding.textView.text = getString(
-                    R.string.downloading_update_progress,
-                    Formatter.formatFileSize(requireContext(), bytesRead),
-                    Formatter.formatFileSize(requireContext(), size),
-                )
-                binding.progressBar.isIndeterminate = false
-                binding.progressBar.progress = percent
-            } else {
-                binding.textView.text = getString(R.string.downloading_update)
-                binding.progressBar.isIndeterminate = true
-            }
         }
 
         private fun openUpdateUrl(url: String, markChecked: Boolean) {
@@ -1723,9 +1616,6 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         override fun onDestroyView() {
-            updateDownloadDialog?.dismiss()
-            updateDownloadDialogBinding = null
-            updateDownloadDialog = null
             _binding = null
             super.onDestroyView()
         }
@@ -1734,48 +1624,12 @@ class SettingsActivity : AppCompatActivity() {
     class UpdateSettingsFragment : MaterialPreferenceFragment() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.update_preferences, rootKey)
-            findPreference<SwitchPreferenceCompat>("update_check_enabled")?.setOnPreferenceChangeListener { _, newValue ->
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                    newValue == true &&
-                    !requireContext().prefs().getBoolean(C.UPDATE_USE_BROWSER, false) &&
-                    !requireContext().packageManager.canRequestPackageInstalls()
-                ) {
-                    try {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                            "package:${requireContext().packageName}".toUri()
-                        )
-                        startActivity(intent)
-                    } catch (e: ActivityNotFoundException) {
-
-                    }
-                }
-                true
-            }
             findPreference<EditTextPreference>("update_check_frequency")?.apply {
                 summary = getString(R.string.update_check_frequency_summary, text)
                 setOnPreferenceChangeListener { _, newValue ->
                     summary = getString(R.string.update_check_frequency_summary, newValue)
                     true
                 }
-            }
-            findPreference<SwitchPreferenceCompat>("update_use_browser")?.setOnPreferenceChangeListener { _, newValue ->
-                if (Build.VERSION.SDK_INT == Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                    newValue == false &&
-                    requireContext().prefs().getBoolean(C.UPDATE_CHECK_ENABLED, false) &&
-                    !requireContext().packageManager.canRequestPackageInstalls()
-                ) {
-                    try {
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                            "package:${requireContext().packageName}".toUri()
-                        )
-                        startActivity(intent)
-                    } catch (e: ActivityNotFoundException) {
-
-                    }
-                }
-                true
             }
         }
 

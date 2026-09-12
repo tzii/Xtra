@@ -4,14 +4,9 @@
     android:height="108dp"
     android:viewportWidth="256"
     android:viewportHeight="256">
-    <group
-        android:translateX="44.9"
-        android:translateY="44.7"
-        android:scaleX="0.65"
-        android:scaleY="0.65">
-        <path
-            android:fillColor="#000000"
-            android:fillType="evenOdd"
-            android:pathData="M233 96.31l-153.6-88.31-56.78 31.76v175.4l56.44 33.22 153.9-89.69v-62.4z M88.31 80.43l80.41 47.33-80.41 46.75v-94.08z" />
-    </group>
+    <!-- Same silhouette, placement and play counter as the color foreground. -->
+    <path
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M102,56 L194,109 L194,147 L102,200 L70,180 L70,76 Z M108,100 L156,128 L108,156 Z" />
 </vector>

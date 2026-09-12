@@ -100,7 +100,7 @@ class MediaPlayerFragment : PlayerFragment() {
                     playbackService?.videoSizeListener = MediaPlayer.OnVideoSizeChangedListener { _, width, height ->
                         if (width > 0 && height > 0) {
                             val aspectRatio = width.toFloat() / height
-                            binding.aspectRatioFrameLayout.setAspectRatio(aspectRatio)
+                            updateVideoAspectRatio(aspectRatio)
                         }
                     }
                     playbackService?.errorListener = MediaPlayer.OnErrorListener { _, _, _ ->

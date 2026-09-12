@@ -18,7 +18,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.CommonRecyclerViewLayoutBinding
-import com.github.andreyasadchy.xtra.model.ui.User
+import com.github.andreyasadchy.xtra.model.ui.ChannelSearchItem
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.PagedListFragment
 import com.github.andreyasadchy.xtra.ui.search.RecentSearchAdapter
@@ -37,7 +37,7 @@ class ChannelSearchFragment : PagedListFragment(), Searchable {
     private var _binding: CommonRecyclerViewLayoutBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ChannelSearchViewModel by viewModels()
-    private lateinit var pagingAdapter: PagingDataAdapter<User, out RecyclerView.ViewHolder>
+    private lateinit var pagingAdapter: PagingDataAdapter<ChannelSearchItem, out RecyclerView.ViewHolder>
     private var recentSearchAdapter = RecentSearchAdapter({ (parentFragment as? SearchPagerFragment)?.setQuery(it.query) }, { viewModel.deleteRecentSearch(it) })
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {

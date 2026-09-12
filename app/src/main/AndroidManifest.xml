@@ -16,6 +16,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <queries>
+        <intent>
+            <action android:name="android.content.pm.action.CONFIRM_INSTALL" />
+        </intent>
+        <intent>
+            <action android:name="android.content.pm.action.CONFIRM_PERMISSIONS" />
+        </intent>
+    </queries>
+
     <application
         android:name=".ThystTVApp"
         android:allowBackup="true"
@@ -103,6 +112,10 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <receiver
+            android:name=".util.update.UpdateInstallReceiver"
+            android:exported="false" />
 
         <receiver
             android:name="android.app.admin.DeviceAdminReceiver"

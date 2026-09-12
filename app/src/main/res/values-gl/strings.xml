@@ -732,4 +732,5 @@
     <string name="external_tv_login_message">Para acceder a todas as funcións, necesitas iniciar sesión como dispositivo Android TV.\n\nSegue estes pasos:\n• Copia o código mostrado na pantalla.\n• Preme o botón \"Abrir URL\".\n• Introduce o código e preme \"Activar\".\n• Preme \"Autorizar\".\n• Volve a Xtra e preme \"Seguinte\".</string>
     <string name="activate_notifications_when_following">Activate notifications when following</string>
     <string name="account">Account</string>
+    <string name="close">Pechar</string>
 </resources>

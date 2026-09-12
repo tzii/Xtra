@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.SharedPreferences
-import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Color
@@ -21,7 +20,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
-import android.text.format.Formatter
 import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
@@ -30,7 +28,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -61,7 +58,6 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.github.andreyasadchy.xtra.R
 import com.github.andreyasadchy.xtra.databinding.ActivityMainBinding
-import com.github.andreyasadchy.xtra.databinding.DialogUpdateDownloadBinding
 import com.github.andreyasadchy.xtra.model.ui.Clip
 import com.github.andreyasadchy.xtra.model.ui.OfflineVideo
 import com.github.andreyasadchy.xtra.model.ui.Stream
@@ -71,6 +67,7 @@ import com.github.andreyasadchy.xtra.ui.channel.ChannelPagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.common.IntegrityDialog
 import com.github.andreyasadchy.xtra.ui.common.Scrollable
 import com.github.andreyasadchy.xtra.ui.common.UpdateAvailableDialog
+import com.github.andreyasadchy.xtra.ui.common.UpdateDialogController
 import com.github.andreyasadchy.xtra.ui.game.GameMediaFragmentDirections
 import com.github.andreyasadchy.xtra.ui.game.GamePagerFragmentDirections
 import com.github.andreyasadchy.xtra.ui.games.GamesFragmentDirections
@@ -84,16 +81,16 @@ import com.github.andreyasadchy.xtra.util.C
 import com.github.andreyasadchy.xtra.util.TwitchApiHelper
 import com.github.andreyasadchy.xtra.util.UpdateUtils
 import com.github.andreyasadchy.xtra.util.applyTheme
-import com.github.andreyasadchy.xtra.util.getAlertDialogBuilder
 import com.github.andreyasadchy.xtra.util.prefs
 import com.github.andreyasadchy.xtra.util.tokenPrefs
+import com.github.andreyasadchy.xtra.util.update.UpdateHost
 import com.google.android.material.color.MaterialColors
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.schedule
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -101,7 +98,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
         const val KEY_VIDEO = "video"
 
-        const val INTENT_INSTALL_UPDATE = "com.github.andreyasadchy.xtra.INSTALL_UPDATE"
         const val INTENT_LIVE_NOTIFICATION = "com.github.andreyasadchy.xtra.LIVE_NOTIFICATION"
         const val INTENT_OPEN_DOWNLOADS_TAB = "com.github.andreyasadchy.xtra.OPEN_DOWNLOADS_TAB"
         const val INTENT_OPEN_DOWNLOADED_VIDEO = "com.github.andreyasadchy.xtra.OPEN_DOWNLOADED_VIDEO"
@@ -145,8 +141,6 @@ class MainActivity : AppCompatActivity() {
     var settingsResultLauncher: ActivityResultLauncher<Intent>? = null
     var loginResultLauncher: ActivityResultLauncher<Intent>? = null
     var logoutResultLauncher: ActivityResultLauncher<Intent>? = null
-    private var updateDownloadDialogBinding: DialogUpdateDownloadBinding? = null
-    private var updateDownloadDialog: AlertDialog? = null
 
     //Lifecycle methods
 
@@ -176,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         applyTheme()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        UpdateDialogController(this, viewModel.updater, UpdateHost.MAIN)
         setNavBarColor(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
         val ignoreCutouts = prefs.getBoolean(C.UI_DRAW_BEHIND_CUTOUTS, false)
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, windowInsets ->
@@ -267,27 +262,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.updateUrl.collectLatest {
-                    if (it != null) {
-                        showUpdateDialog(it)
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.updateChecks.state.collectLatest { result ->
+                    if (result != null && viewModel.updateChecks.consume(result)) {
+                        result.value?.let(::showUpdateDialog)
                     }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.updateProgress.collectLatest { bytesRead ->
-                    updateDownloadDialogBinding?.let { binding ->
-                        updateDownloadDialogText(binding, bytesRead)
-                    }
-                }
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.closeUpdateDialog.collectLatest {
-                    updateDownloadDialog?.dismiss()
                 }
             }
         }
@@ -519,36 +498,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUpdateDownloadDialog(downloadUrl: String) {
-        val binding = DialogUpdateDownloadBinding.inflate(layoutInflater)
-        updateDownloadDialogBinding = binding
-        updateDownloadDialogText(binding, 0L)
         viewModel.downloadUpdate(prefs.getString(C.NETWORK_LIBRARY, "OkHttp"), downloadUrl)
-        updateDownloadDialog = getAlertDialogBuilder()
-            .setView(binding.root)
-            .setNegativeButton(getString(android.R.string.cancel), null)
-            .setOnDismissListener {
-                viewModel.updateJob?.cancel()
-                updateDownloadDialogBinding = null
-                updateDownloadDialog = null
-            }
-            .show()
-    }
-
-    private fun updateDownloadDialogText(binding: DialogUpdateDownloadBinding, bytesRead: Long) {
-        val size = viewModel.updateSize
-        val percent = UpdateUtils.downloadProgressPercent(bytesRead, size)
-        if (size != null && percent != null) {
-            binding.textView.text = getString(
-                R.string.downloading_update_progress,
-                Formatter.formatFileSize(this, bytesRead),
-                Formatter.formatFileSize(this, size),
-            )
-            binding.progressBar.isIndeterminate = false
-            binding.progressBar.progress = percent
-        } else {
-            binding.textView.text = getString(R.string.downloading_update)
-            binding.progressBar.isIndeterminate = true
-        }
     }
 
     private fun openUpdateUrl(url: String, markChecked: Boolean) {
@@ -712,22 +662,6 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
                         }
-                    }
-                }
-            }
-            INTENT_INSTALL_UPDATE -> {
-                val extras = intent.extras
-                if (extras?.getInt(PackageInstaller.EXTRA_STATUS) == PackageInstaller.STATUS_PENDING_USER_ACTION) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        extras.getParcelable(Intent.EXTRA_INTENT, Intent::class.java)
-                    } else {
-                        @Suppress("DEPRECATION")
-                        extras.getParcelable(Intent.EXTRA_INTENT)
-                    }?.let {
-                        tokenPrefs().edit {
-                            putLong(C.UPDATE_LAST_CHECKED, System.currentTimeMillis())
-                        }
-                        startActivity(it)
                     }
                 }
             }

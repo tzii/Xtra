@@ -1,3 +1,36 @@
+# ThystTV 1.3.0
+
+## Player and viewing
+
+- Consistent Quality, Speed, Stream volume and More overlays with fixed headers and reachable options.
+- Fit/Fill/Stretch landscape display modes, pinch feedback, a gesture guide and improved tablet mini-player sizing.
+- Stable Quality gear through rotation and clearer brightness, device-volume and stream-volume feedback.
+- Closed players release their landscape system-bar listener.
+- Completed saved videos restart at zero; unfinished positions and explicit timestamps stay respected.
+- Legacy headset previous/next controls seek once per press.
+
+## Discovery, chat and Stats
+
+- Live status and stream entry points in channel search and profiles.
+- Responsive high-speed VoD chat replay, including downloaded chat.
+- Correct followed-channel paging and native Twitch emote autocomplete refresh.
+- Destination-host labels for social links and compact Markdown heading support.
+- Compact Stats cards, readable chart scales and smoother range changes.
+
+## Updates and appearance
+
+- Clear update metadata and release notes, fixed actions and live window resizing.
+- Shared download and installer state survives screen pauses/recreation while the process remains alive.
+- Cancel/retry/browser recovery, install-permission guidance and private session-specific installer callbacks.
+- Refreshed adaptive/themed/legacy gem icon and restored localized text.
+
+## Upgrade notes
+
+Landscape display settings migrate automatically to Fit/Fill/Stretch; no database schema migration is added.
+Updater downloads do not resume after process death. Cronet/HttpEngine may report only final progress.
+New updater captions use English fallback where translations are unavailable.
+For unfinished downloads originally started on 1.2.0, delete and restart those downloads.
+
 # ThystTV 1.2.1
 
 ThystTV 1.2.1 is a focused compatibility and reliability release.

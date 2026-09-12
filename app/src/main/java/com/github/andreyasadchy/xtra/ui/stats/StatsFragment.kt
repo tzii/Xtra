@@ -267,6 +267,8 @@ class StatsFragment : Fragment(R.layout.fragment_stats), Scrollable {
             }
         }
         binding.statsRecyclerView.adapter = dashboardAdapter
+        (binding.statsRecyclerView.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)
+            ?.supportsChangeAnimations = false
         binding.statsRecyclerView.setHasFixedSize(false)
         replaceDashboardSpacingDecoration(binding.statsRecyclerView)
     }
@@ -424,9 +426,14 @@ class StatsFragment : Fragment(R.layout.fragment_stats), Scrollable {
     }
 
     private fun FragmentStatsBinding.syncRangeChip(timeRange: StatsTimeRange) {
-        range7Days.isChecked = timeRange == StatsTimeRange.LAST_7_DAYS
-        range30Days.isChecked = timeRange == StatsTimeRange.LAST_30_DAYS
-        rangeAllTime.isChecked = timeRange == StatsTimeRange.ALL_TIME
+        val checkedButtonId = when (timeRange) {
+            StatsTimeRange.LAST_7_DAYS -> R.id.range7Days
+            StatsTimeRange.LAST_30_DAYS -> R.id.range30Days
+            StatsTimeRange.ALL_TIME -> R.id.rangeAllTime
+        }
+        if (rangeButtonGroup.checkedButtonId != checkedButtonId) {
+            rangeButtonGroup.check(checkedButtonId)
+        }
     }
 
     private fun buildStreakCard(streak: WatchStreak?): StatsDashboardItem.Streak {

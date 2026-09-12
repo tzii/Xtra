@@ -190,16 +190,6 @@
             app:tint="@android:color/white"
             tools:visibility="visible" />
 
-        <ImageButton
-            android:id="@+id/aspectRatio"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/baseline_aspect_ratio_black_24"
-            android:visibility="gone"
-            app:tint="@android:color/white"
-            tools:visibility="visible" />
-
         <TextView
             android:id="@+id/speed"
             android:layout_width="64dp"
@@ -226,9 +216,10 @@
 
         <ImageButton
             android:id="@+id/quality"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@android:color/transparent"
+            android:contentDescription="@string/quality"
             android:src="@drawable/baseline_settings_black_24"
             android:visibility="gone"
             app:tint="@android:color/white"

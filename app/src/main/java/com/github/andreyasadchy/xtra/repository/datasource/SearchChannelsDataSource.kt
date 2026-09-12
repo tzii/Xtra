@@ -2,7 +2,8 @@ package com.github.andreyasadchy.xtra.repository.datasource
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.github.andreyasadchy.xtra.model.ui.User
+import com.github.andreyasadchy.xtra.model.ui.ChannelSearchItem
+import com.github.andreyasadchy.xtra.repository.ChannelSearchMapper
 import com.github.andreyasadchy.xtra.repository.GraphQLRepository
 import com.github.andreyasadchy.xtra.repository.HelixRepository
 import com.github.andreyasadchy.xtra.util.C
@@ -16,11 +17,11 @@ class SearchChannelsDataSource(
     private val enableIntegrity: Boolean,
     private val apiPref: List<String>,
     private val networkLibrary: String?,
-) : PagingSource<Int, User>() {
+) : PagingSource<Int, ChannelSearchItem>() {
     private var api: String? = null
     private var offset: String? = null
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, User> {
+    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, ChannelSearchItem> {
         return if (query.isBlank()) {
             LoadResult.Page(
                 data = emptyList(),
@@ -52,7 +53,7 @@ class SearchChannelsDataSource(
         }
     }
 
-    private suspend fun loadFromApi(apiPref: String?, params: LoadParams<Int>): LoadResult<Int, User> {
+    private suspend fun loadFromApi(apiPref: String?, params: LoadParams<Int>): LoadResult<Int, ChannelSearchItem> {
         api = apiPref
         return when (apiPref) {
             C.GQL -> gqlQueryLoad(params)
@@ -62,23 +63,14 @@ class SearchChannelsDataSource(
         }
     }
 
-    private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, User> {
+    private suspend fun gqlQueryLoad(params: LoadParams<Int>): LoadResult<Int, ChannelSearchItem> {
         val response = graphQLRepository.loadQuerySearchChannels(networkLibrary, gqlHeaders, query, params.loadSize, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.searchUsers!!
         val list = data.edges!!.mapNotNull { item ->
-            item.node?.let {
-                User(
-                    id = it.id,
-                    login = it.login,
-                    name = it.displayName,
-                    profileImageURL = it.profileImageURL,
-                    followerCount = it.followers?.totalCount,
-                    isLive = it.stream?.viewersCount != null,
-                )
-            }
+            ChannelSearchMapper.fromGqlQuery(item.node)
         }
         offset = data.edges.lastOrNull()?.cursor?.toString()
         val nextPage = data.pageInfo?.hasNextPage != false
@@ -91,23 +83,14 @@ class SearchChannelsDataSource(
         )
     }
 
-    private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, User> {
+    private suspend fun gqlLoad(params: LoadParams<Int>): LoadResult<Int, ChannelSearchItem> {
         val response = graphQLRepository.loadSearchChannels(networkLibrary, gqlHeaders, query, offset)
         if (enableIntegrity) {
             response.errors?.find { it.message == "failed integrity check" }?.let { return LoadResult.Error(Exception(it.message)) }
         }
         val data = response.data!!.searchFor.channels
         val list = data.edges.map { item ->
-            item.item.let {
-                User(
-                    id = it.id,
-                    login = it.login,
-                    name = it.displayName,
-                    profileImageURL = it.profileImageURL,
-                    followerCount = it.followers?.totalCount,
-                    isLive = it.stream?.viewersCount != null,
-                )
-            }
+            ChannelSearchMapper.fromGqlPersisted(item.item)
         }
         offset = data.cursor
         return LoadResult.Page(
@@ -119,7 +102,7 @@ class SearchChannelsDataSource(
         )
     }
 
-    private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, User> {
+    private suspend fun helixLoad(params: LoadParams<Int>): LoadResult<Int, ChannelSearchItem> {
         val response = helixRepository.getSearchChannels(
             networkLibrary = networkLibrary,
             headers = helixHeaders,
@@ -128,13 +111,7 @@ class SearchChannelsDataSource(
             offset = offset,
         )
         val list = response.data.map {
-            User(
-                id = it.id,
-                login = it.login,
-                name = it.displayName,
-                profileImageURL = it.profileImageURL,
-                isLive = it.isLive,
-            )
+            ChannelSearchMapper.fromHelix(it)
         }
         offset = response.pagination?.cursor
         return LoadResult.Page(
@@ -146,7 +123,7 @@ class SearchChannelsDataSource(
         )
     }
 
-    override fun getRefreshKey(state: PagingState<Int, User>): Int? {
+    override fun getRefreshKey(state: PagingState<Int, ChannelSearchItem>): Int? {
         return state.anchorPosition?.let { anchorPosition ->
             val anchorPage = state.closestPageToPosition(anchorPosition)
             anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)

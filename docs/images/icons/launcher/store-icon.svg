@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>ThystTV store icon</title>
+  <desc>Full-bleed opaque 512px master for Google Play rounded-square presentation. The centered gem has at least 76px of padding. Google Play applies the corner mask on upload; export this master as a 512px sRGB PNG.</desc>
+  <defs>
+    <linearGradient id="bevel" x1="78" y1="64" x2="110" y2="106" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C4A4FF" />
+      <stop offset="1" stop-color="#9864E7" />
+    </linearGradient>
+    <linearGradient id="crown" x1="108" y1="58" x2="176" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A276EE" />
+      <stop offset="1" stop-color="#7040BD" />
+    </linearGradient>
+    <linearGradient id="glint" x1="138" y1="103" x2="169" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#AD82F1" />
+      <stop offset="1" stop-color="#824ACE" />
+    </linearGradient>
+    <linearGradient id="rim" x1="80" y1="76" x2="177" y2="182" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9563E0" />
+      <stop offset="1" stop-color="#6C39B4" />
+    </linearGradient>
+    <linearGradient id="inset" x1="78" y1="95" x2="106" y2="177" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8552CA" />
+      <stop offset="1" stop-color="#6535A7" />
+    </linearGradient>
+    <linearGradient id="recess" x1="105" y1="79" x2="149" y2="126" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6D3FA8" />
+      <stop offset="1" stop-color="#45216F" />
+    </linearGradient>
+    <linearGradient id="depth" x1="144" y1="131" x2="104" y2="192" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#51267E" />
+      <stop offset="1" stop-color="#7842BE" />
+    </linearGradient>
+    <linearGradient id="lower" x1="153" y1="130" x2="170" y2="159" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9864E7" />
+      <stop offset="1" stop-color="#7541C4" />
+    </linearGradient>
+    <linearGradient id="foundation" x1="164" y1="157" x2="110" y2="199" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8050C6" />
+      <stop offset="1" stop-color="#6938AB" />
+    </linearGradient>
+  </defs>
+  <defs>
+    <radialGradient id="background-lift" cx="112" cy="100" r="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#211832" />
+      <stop offset="0.55" stop-color="#14101F" />
+      <stop offset="1" stop-color="#0B0912" />
+    </radialGradient>
+  </defs>
+  <g transform="scale(2)">
+    <path fill="url(#background-lift)" d="M0,0 H256 V256 H0 Z" />
+  </g>
+  <g transform="translate(-64 -64) scale(2.5)">
+    <!-- Opaque underpaint prevents transparent seams between shared facet edges. -->
+    <path fill="#7541C4" d="M102,56 L194,109 L194,147 L102,200 L70,180 L70,76 Z" />
+    <path fill="url(#crown)" d="M102,56 L194,109 L138,104 Z" />
+    <path fill="url(#glint)" d="M138,104 L194,109 L156,128 Z" />
+    <path fill="url(#rim)" d="M194,109 L194,147 L156,128 Z" />
+    <path fill="url(#lower)" d="M156,128 L194,147 L138,152 Z" />
+    <path fill="url(#foundation)" d="M194,147 L102,200 L138,152 Z" />
+    <path fill="url(#bevel)" d="M70,76 L102,56 L108,100 Z" />
+    <path fill="url(#rim)" d="M70,76 L94,128 L70,180 Z" />
+    <path fill="url(#inset)" d="M70,76 L108,100 L94,128 Z" />
+    <path fill="url(#foundation)" d="M94,128 L108,156 L70,180 Z" />
+    <path fill="url(#inset)" d="M70,180 L108,156 L102,200 Z" />
+    <path fill="url(#recess)" d="M102,56 L138,104 L156,128 L108,100 Z" />
+    <path fill="url(#depth)" d="M102,200 L108,156 L156,128 L138,152 Z" />
+    <path fill="#7040BD" d="M94,128 L108,100 L108,156 Z" />
+    <path fill="#00E5EF" d="M108,100 L156,128 L108,156 Z" />
+  </g>
+</svg>

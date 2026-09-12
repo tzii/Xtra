@@ -93,7 +93,8 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                                 if (!title.isNullOrBlank()) {
                                     socialMediaList.addView(
                                         TextView(requireContext()).apply {
-                                            val spannableString = SpannableString(title)
+                                            val label = socialLinkLabel(title, url)
+                                            val spannableString = SpannableString(label)
                                             spannableString.setSpan(StyleSpan(Typeface.BOLD), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                                             if (url != null) {
                                                 spannableString.setSpan(object : ClickableSpan() {
@@ -107,7 +108,7 @@ class ChannelAboutFragment : BaseNetworkFragment(), IntegrityDialog.CallbackList
                                                             Toast.makeText(requireContext(), R.string.no_browser_found, Toast.LENGTH_LONG).show()
                                                         }
                                                     }
-                                                }, 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                                                }, 0, label.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                                                 movementMethod = LinkMovementMethod.getInstance()
                                             }
                                             text = spannableString

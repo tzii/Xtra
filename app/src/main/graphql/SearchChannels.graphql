@@ -11,6 +11,13 @@ query SearchChannels($query: String!, $first: Int, $after: Cursor) {
                 login
                 profileImageURL(width: 300)
                 stream {
+                    createdAt
+                    game {
+                        displayName
+                    }
+                    id
+                    previewImageURL
+                    title
                     viewersCount
                 }
             }

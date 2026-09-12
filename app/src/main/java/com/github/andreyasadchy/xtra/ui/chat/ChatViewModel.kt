@@ -506,24 +506,19 @@ class ChatViewModel @Inject constructor(
         }
     }
 
+    private fun updateUserEmoteLists(emotes: List<TwitchEmote>, channelId: String?) {
+        val suggestions = twitchEmoteSuggestions(emotes, channelId)
+        synchronized(userEmotes) {
+            userEmotes.clear()
+            userEmotes.addAll(suggestions)
+        }
+        replaceTwitchSuggestions(autoCompleteList, suggestions)
+    }
+
     private fun loadUserEmotes(channelId: String?) {
         val saved = savedUserEmotes
         if (!saved.isNullOrEmpty()) {
-            synchronized(userEmotes) {
-                userEmotes.clear()
-                userEmotes.addAll(
-                    saved.sortedByDescending { it.ownerId == channelId }.map {
-                        Emote(
-                            name = it.name,
-                            url1x = it.url1x,
-                            url2x = it.url2x,
-                            url3x = it.url3x,
-                            url4x = it.url4x,
-                            format = it.format
-                        )
-                    }
-                )
-            }
+            updateUserEmoteLists(saved, channelId)
             viewModelScope.launch {
                 userEmotesUpdated.emit(Unit)
             }
@@ -543,21 +538,7 @@ class ChatViewModel @Inject constructor(
                         val emotes = playerRepository.loadUserEmotes(networkLibrary, helixHeaders, gqlHeaders, channelId, accountId, animateGifs, enableIntegrity)
                         if (emotes.isNotEmpty()) {
                             val sorted = emotes.sortedByDescending { it.setId }
-                            synchronized(userEmotes) {
-                                userEmotes.clear()
-                                userEmotes.addAll(
-                                    sorted.sortedByDescending { it.ownerId == channelId }.map {
-                                        Emote(
-                                            name = it.name,
-                                            url1x = it.url1x,
-                                            url2x = it.url2x,
-                                            url3x = it.url3x,
-                                            url4x = it.url4x,
-                                            format = it.format
-                                        )
-                                    }
-                                )
-                            }
+                            updateUserEmoteLists(sorted, channelId)
                             userEmotesUpdated.emit(Unit)
                             synchronized(allEmotes) {
                                 allEmotes.addAll(sorted.filter { it.name !in allEmotes }.mapNotNull { it.name })
@@ -1586,21 +1567,7 @@ class ChatViewModel @Inject constructor(
                     if (emotes.isNotEmpty()) {
                         val sorted = emotes.sortedByDescending { it.setId }
                         savedUserEmotes = sorted
-                        synchronized(userEmotes) {
-                            userEmotes.clear()
-                            userEmotes.addAll(
-                                sorted.sortedByDescending { it.ownerId == channelId }.map {
-                                    Emote(
-                                        name = it.name,
-                                        url1x = it.url1x,
-                                        url2x = it.url2x,
-                                        url3x = it.url3x,
-                                        url4x = it.url4x,
-                                        format = it.format
-                                    )
-                                }
-                            )
-                        }
+                        updateUserEmoteLists(sorted, channelId)
                         userEmotesUpdated.emit(Unit)
                         synchronized(allEmotes) {
                             allEmotes.addAll(sorted.filter { it.name !in allEmotes }.mapNotNull { it.name })

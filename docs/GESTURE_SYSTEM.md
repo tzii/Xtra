@@ -8,7 +8,7 @@ The ThystTV gesture system provides intuitive touch controls for video playback,
 *   **Location:** `ui/player/PlayerGestureListener.kt`
 *   **Role:** The central state machine. It extends `GestureDetector.SimpleOnGestureListener` to handle raw touch events from the Android `GestureDetector`.
 *   **Responsibilities:**
-    *   Detects gesture types based on screen zones (Left/Right for Volume/Brightness, Top/Bottom for Seek/Speed).
+    *   Detects gesture types based on screen zones (Left/Right for Volume/Brightness, Top/Bottom for Speed/Seek).
     *   Manages the gesture lifecycle (Down -> Scroll -> Up/Cancel).
     *   Prevents conflicts with other gestures (e.g., tap controls, minimize gesture).
     *   Applies settings (sensitivity, zone split, haptics).
@@ -50,9 +50,19 @@ The `PlayerGestureListener` uses a set of boolean flags to track the current ges
 *   **Vertical Swipes:**
     *   Left 50%: Brightness
     *   Right 50%: Volume
-*   **Horizontal Swipes (VoD Only):**
-    *   Top X%: Seek (Configurable via `zoneSplit`)
-    *   Bottom Y%: Playback Speed
+*   **Horizontal Swipes (seekable media only):**
+    *   Top X%: Playback Speed (Configurable via `zoneSplit`)
+    *   Bottom Y%: Seek
+    *   Zone selection is pure logic in `PlayerGestureZonePolicy`; a start position exactly on the split line belongs to the lower (seek) zone.
+
+### Pinch Display Modes
+*   Pinch feedback uses a directional bar (`PlayerGestureFeedbackState.pinchLevel`): half-full at neutral, growing to full while arming or elastically pushing Fill and emptying while arming or elastically pushing Fit. Both useful and dead-direction motion therefore remain visible in the pill.
+*   Pinch ownership begins after a 2% cumulative relative-scale deadzone. There is no absolute pixel-span gate, so recognition does not vary with the initial distance between fingers. Two stationary fingers still claim nothing.
+*   Fit/Fill previews stay in the committed renderer's coordinate space (`PlayerDisplayModePreviewer`): Fit scales from 1 to the Fill-to-Fit ratio; Fill scales from 1 to its inverse. Controller progress is logarithmic over reciprocal arm thresholds (1.15 outward / about 0.87 inward), and view scale is interpolated geometrically, so multiplicative finger motion produces perceptually even zoom. This avoids changing `AspectRatioFrameLayout.resizeMode` while fingers are down. An armed commit retains the equivalent preview scale until the target renderer's next layout and then normalizes to unit scale. Neutral releases use a 240ms emphasized deceleration to unit scale in the unchanged renderer. Stretch and pre-N devices step only when armed.
+*   Dead-direction pinches emit `PinchDisplayModeController.Event.Elastic` with a normalized 0..1 deformation. A quadratic ease-out resistance curve is responsive near neutral and reaches zero velocity at 12% span deviation; it renders as a restrained maximum 5% view-scale deformation relative to the committed renderer and settles back on release. The controller's `update()` takes cumulative span scale relative to pinch start (1.0 = neutral), never an incremental detector factor.
+*   Establishment rule: once a gesture has emitted Preview or Elastic, crossing neutral emits zero-deformation Elastic instead of `NoPreview`, so no event finalizes the surface between manipulation start and release/cancel; `NoPreview` (and its canonical finalize) only occurs before a direction is established.
+*   The pinch ends when the first of the two tracked fingers lifts. Restore/commit starts immediately, while the remaining finger stays suppressed until the final pointer release so it cannot resume an old one-finger gesture.
+*   Canonical surface geometry is owned by `PlayerFragment.finalizePinchSurface()`, which cancels any settle and applies the committed mode's resize mode and unit scale. New pinch starts, `selectDisplayMode`, minimize/restore visual state, and `onDestroyView` all route through it so a partially transformed surface cannot survive.
 
 ## Adding New Gestures
 
@@ -64,4 +74,7 @@ The `PlayerGestureListener` uses a set of boolean flags to track the current ges
 ## Testing
 
 *   **`PlayerGestureHelperTest`**: Unit tests for the math and logic (pure functions). Mocks `Context` for `AudioManager`.
-*   **Integration**: Currently, `PlayerGestureListener` logic is verified via manual testing due to `MotionEvent` mocking complexities in unit tests.
+*   **`PlayerGestureZonePolicyTest`**: Unit tests for horizontal zone selection, including the split-line boundary.
+*   **`PlayerGestureFeedbackStateTest` / `PlayerSurfacePolicyTest`**: Unit tests for feedback presentation and placement (compact top-centered pill, wide vertical edge pills, always-visible pinch bar).
+*   **`PinchDisplayModeControllerTest` / `PlayerDisplayModePreviewerTest`**: Unit tests for the pinch state machine (arm/hysteresis, responsive elastic deformation, neutral-crossing continuity) and renderer-relative preview/elastic scales.
+*   **Integration**: Remaining `PlayerGestureListener` wiring is verified via manual testing due to `MotionEvent` mocking complexities in unit tests.
